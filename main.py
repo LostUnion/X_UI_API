@@ -1,9 +1,68 @@
+#################################################################
+# █████████████████████████████████████████████████████████████ #
+# █░░░░░░░░██░░░░░░░░████████████████░░░░░░██░░░░░░█░░░░░░░░░░█ #
+# █░░▄▀▄▀░░██░░▄▀▄▀░░████████████████░░▄▀░░██░░▄▀░░█░░▄▀▄▀▄▀░░█ #
+# █░░░░▄▀░░██░░▄▀░░░░████████████████░░▄▀░░██░░▄▀░░█░░░░▄▀░░░░█ #
+# ███░░▄▀▄▀░░▄▀▄▀░░██████████████████░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
+# ███░░░░▄▀▄▀▄▀░░░░███░░░░░░░░░░░░░░█░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
+# █████░░▄▀▄▀▄▀░░█████░░▄▀▄▀▄▀▄▀▄▀░░█░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
+# ███░░░░▄▀▄▀▄▀░░░░███░░░░░░░░░░░░░░█░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
+# ███░░▄▀▄▀░░▄▀▄▀░░██████████████████░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
+# █░░░░▄▀░░██░░▄▀░░░░████████████████░░▄▀░░░░░░▄▀░░█░░░░▄▀░░░░█ #
+# █░░▄▀▄▀░░██░░▄▀▄▀░░████████████████░░▄▀▄▀▄▀▄▀▄▀░░█░░▄▀▄▀▄▀░░█ #
+# █░░░░░░░░██░░░░░░░░████████████████░░░░░░░░░░░░░░█░░░░░░░░░░█ #
+# █████████████████████████████████████████████████████████████ #
+# ------------------------------------------------------------- #
+# ----------------------ПОДКЛЮЧЕНИЕ К X-UI--------------------- #
+# conn = X_UI(                                                  #
+#     x_ui_login="YOUR LOGIN",                                  #
+#     x_ui_password="YOUR PASSWORD",                            #
+#     x_ui_link="YOUR X-UI LINK"                                #
+# )                                                             #
+# conn.session_up()                                             #
+# При ответе 200, сессия считается запущенной.                  #
+# -------------------------УПРАВЛЕНИЕ-------------------------- #
+# Получение информации о системе:                               #
+# conn.get_system_status()                                      #
+#                                                               #
+# Получение всех подключений и пользователей.                   #
+# conn.get_all_list()                                           #
+#                                                               #
+# Получение всех подключений и пользователей.                   #
+# conn.get_all_list()                                           #
+#                                                               #
+# Остановка xray. / Работает если отключен перезапуск.          #
+# conn.xray_stop()                                              #
+#                                                               #
+# Перезапуск xray.                                              #
+# conn.xray_restart()                                           #
+#                                                               #
+# Запуск xray.                                                  #
+# conn.xray_start()                                             #
+#                                                               #
+# Добавление пользователя.                                      #
+# conn.add_client(                                              #
+#       connection_id: int,               ID подключения        #
+#       flow: str,                        Режим                 #
+#       email: str,                       Почта или название    #
+#       limit_ip: int,                    Лимит по IP           #
+#       totalGB: float,                   Лимит по GB           #
+#       expirtyTime: int,                 Количество дней       #
+#       enable: bool,                     Включен или нет       #
+#       tgId: int,                        ID Telegram           #
+#       comment: str                      Комментарий           #
+#     )                                                         #
+# Получение ссылки vless                                        #
+# conn.get_vless_link(user_id: str)      ID клиента             #
+#################################################################
+
 import os
 import uuid
 import time
 import json
 from datetime import datetime
 from abc import ABC
+import urllib.parse
 
 import urllib3
 import requests
@@ -23,10 +82,6 @@ urllib3.disable_warnings(
 # из файла .env в os.environ.
 load_dotenv()
 
-x_ui_link = str(os.getenv('AUTH_LINK'))
-x_ui_login = str(os.getenv('AUTH_LOGIN'))
-x_ui_password = str(os.getenv('AUTH_PASSWORD'))
-
 vless_host = str(os.getenv('VLESS_HOST'))
 vless_port = str(os.getenv('VLESS_PORT'))
 
@@ -35,23 +90,30 @@ class API_CLIENT(ABC):
         self.session = requests.Session()
 
 class X_UI(API_CLIENT):
-    def __init__(self):
+    def __init__(self,
+                 x_ui_login: str,
+                 x_ui_password: str,
+                 x_ui_link: str):
+        
         super().__init__()
+        self.x_ui_login = x_ui_login
+        self.x_ui_password = x_ui_password
+        self.x_ui_link = x_ui_link
 
     # Поднятие сессии и запись
     # cookies после авторизации.
     def session_up(self):
         log.info(
-            f"Connecting to \"{x_ui_link}\""
+            f"Connecting to \"{self.x_ui_link}\""
         )
 
         try:
             # Авторизация в панели x-ui.
             res = self.session.post(
-                url=f"{x_ui_link}/login",
+                url=f"{self.x_ui_link}/login",
                 json={
-                    "username": x_ui_login,
-                    "password": x_ui_password
+                    "username": self.x_ui_login,
+                    "password": self.x_ui_password
                 },
                 # Пропуск проверки
                 # самоподписного сертификата.
@@ -151,7 +213,7 @@ class X_UI(API_CLIENT):
             # Запрос на получение
             # конфигурационных данных пользователей.
             res = self.session.get(
-                url=f"{x_ui_link}/server/getDb",
+                url=f"{self.x_ui_link}/server/getDb",
                 # Пропуск проверки
                 # самоподписного сертификата.
                 verify=False,
@@ -284,7 +346,7 @@ class X_UI(API_CLIENT):
             # Запрос на получение
             # всех данных по системе x-ui.
             res = self.session.post(
-                url=f"{x_ui_link}/server/status",
+                url=f"{self.x_ui_link}/server/status",
                 # Пропуск проверки
                 # самоподписного сертификата.
                 verify=False,
@@ -526,7 +588,7 @@ class X_UI(API_CLIENT):
             # всех данных по подключениям
             # и пользователям.
             res = self.session.post(
-                url=f"{x_ui_link}/panel/inbound/list",
+                url=f"{self.x_ui_link}/panel/inbound/list",
                 # Пропуск проверки
                 # самоподписного сертификата.
                 verify=False,
@@ -561,7 +623,6 @@ class X_UI(API_CLIENT):
                 if j_cont['success']:
 
                     obj_data = j_cont['obj']
-                    # print(json.dumps(obj_data, indent=4, ensure_ascii=False))
 
                     # Перебор всех значений из obj.
                     for iter_obj in obj_data:
@@ -859,7 +920,7 @@ class X_UI(API_CLIENT):
             # Запрос на получение
             # всех данных по системе x-ui.
             res = self.session.post(
-                url=f"{x_ui_link}/server/status",
+                url=f"{self.x_ui_link}/server/status",
                 # Пропуск проверки
                 # самоподписного сертификата.
                 verify=False,
@@ -924,7 +985,7 @@ class X_UI(API_CLIENT):
             # результата xray после
             # перезагрузки или выключения.
             res = self.session.get(
-                url=f"{x_ui_link}/panel/xray/getXrayResult",
+                url=f"{self.x_ui_link}/panel/xray/getXrayResult",
                 # Пропуск проверки
                 # самоподписного сертификата.
                 verify=False,
@@ -980,7 +1041,7 @@ class X_UI(API_CLIENT):
         try:
             # Запрос на полную остановку xray.
             res = self.session.post(
-                url=f"{x_ui_link}/server/stopXrayService",
+                url=f"{self.x_ui_link}/server/stopXrayService",
                 # Пропуск проверки
                 # самоподписного сертификата.
                 verify=False,
@@ -1093,7 +1154,7 @@ class X_UI(API_CLIENT):
         try:
             # Запрос на перезагрузку xray.
             res = self.session.post(
-                url=f"{x_ui_link}/server/restartXrayService",
+                url=f"{self.x_ui_link}/server/restartXrayService",
                 # Пропуск проверки
                 # самоподписного сертификата.
                 verify=False,
@@ -1254,7 +1315,7 @@ class X_UI(API_CLIENT):
 
             # Запрос на добавление пользователя.
             res = self.session.post(
-                url=f"{x_ui_link}/panel/inbound/addClient",
+                url=f"{self.x_ui_link}/panel/inbound/addClient",
                 # Полезная нагрузка в виде json.
                 json=payload,
                 # Пропуск проверки
@@ -1319,17 +1380,169 @@ class X_UI(API_CLIENT):
                 "X_UI/add_client"
                 f"program block: {err}"
             )
-        
-conn = X_UI()
-conn.session_up()
-# conn.export_conf_backups()
-# conn.get_system_status()
-# conn.get_all_list()
-# res = conn.xray_parse_active()
-# print(res)
-# res = conn.xray_result()
-# print(res)
-# conn.xray_stop()
-# conn.xray_restart()
-# conn.xray_start()
-# conn.add_client(connection_id=4, email="")
+
+    # Получение vless
+    # конфигурации в виде
+    # ссылки.
+    def get_vless_link(self, user_id: str):
+        log.info(
+            "Getting the vless "
+            "configuration as a link"
+        )
+
+        try:
+            # Запрос на получение
+            # конфигурации vless.
+            res = self.session.post(
+                url=f"{self.x_ui_link}/panel/inbound/list",
+                # Пропуск проверки
+                # самоподписного сертификата.
+                verify=False,
+                # Позволяет загружать ответ
+                # по частям, уменьшая нагрузку
+                # на память.
+                stream=True
+            )
+
+            # Проверка успешного
+            # ответа от сервера.
+            if res.status_code == 200:
+
+                # Преобразование бинарного
+                # ответа от сервера в JSON
+                # формат.
+                j_cont = json.loads(res.content)
+
+                # Формирование сообщения
+                # для вывода пользователю
+                # и записи в лог.
+                suc = f"SUCCESS: {j_cont['success']}"
+                msg = f"MESSAGE: {j_cont['msg']}"
+
+                # Сепаратор для визуального разграничения.
+                sep = '-' * (
+                    len(str(suc)) + len(str(msg))
+                )
+
+                # Проверка что в success
+                # от сервера True.
+                if j_cont['success']:
+
+                    obj_data = j_cont['obj']
+
+                    # Перебор всех значений из obj.
+                    for iter_obj in obj_data:
+                        # Сбор всех данных
+                        # по пользователям.
+                        try:
+                            # Из obj берется settings.
+                            # sett_data = iter_obj['settings']
+                            sett_data = json.loads(iter_obj['settings'])
+
+                            # Сбор клиентов на подключении.
+                            clients = sett_data['clients']
+                            # Перебор всех клиентов
+                            # которые присутствуют
+                            # в settings.
+                            for client in clients:
+
+                                if client['id'] == user_id:
+
+                                    # Уникальный UUID клиента.
+                                    user_id = client['id']
+
+                                    # Какой режим используется.
+                                    user_flow = client['flow']
+                                
+                                    # Email пользователя.
+                                    user_email = client['email']
+                                    user_email = urllib.parse.quote(connection_remark, safe='')
+
+                                    # Из obj берется streamSettings.
+                                    sSett_data = json.loads(
+                                        iter_obj['streamSettings']
+                                    )
+
+                                    # Из streamSettings
+                                    # берется realitySettings.
+                                    realSet = sSett_data['realitySettings']
+
+                                    # Под какой сервис
+                                    # происходит маскировка.
+                                    serverName = realSet['serverNames'][0]
+
+                                    # Короткие идентификаторы.
+                                    shortIds = realSet['shortIds'][0]
+
+                                    # Публичный ключ
+                                    # подключения.
+                                    settings_publicKey = realSet['settings']['publicKey']
+
+                                    # Отпечаток подключения.
+                                    settings_fingerprint = realSet['settings']['fingerprint']
+
+                                    # Название подключения
+                                    # (примечание).
+                                    connection_remark = j_cont['obj'][0]['remark']
+
+                                    # Замена пустого значения
+                                    # и специальных символов.
+                                    connection_remark = urllib.parse.quote(connection_remark, safe='')
+
+                                    # Формирование vless ссылки
+                                    # без названия подключения.
+                                    if connection_remark != "":
+                                        vless_link = (
+                                            f"vless://{user_id}@{os.getenv('VLESS_HOST')}:"
+                                            f"{os.getenv('VLESS_PORT')}?type=tcp&security="
+                                            f"reality&pkb={settings_publicKey}"
+                                            f"&fp={settings_fingerprint}&sni={serverName}"
+                                            f"&sid={shortIds[0]}&spx=%2F&flow={user_flow}"
+                                            f"#{connection_remark}-{user_email}"
+                                        )
+                                    
+                                    # Формирование vless ссылки
+                                    # с названием подключения.
+                                    else:
+                                        vless_link = (
+                                            f"vless://{user_id}@{os.getenv('VLESS_HOST')}:"
+                                            f"{os.getenv('VLESS_PORT')}?type=tcp&security="
+                                            f"reality&pbk={settings_publicKey}"
+                                            f"&fp={settings_fingerprint}&sni={serverName}"
+                                            f"&sid={shortIds}&spx=%2F&flow={user_flow}"
+                                            f"#{user_email}"
+                                        )
+
+                                    vless_link = vless_link.replace(" ", "%20")
+                                    log.info(
+                                        f"USER ID {user_id} | VLESS LINK\n\n"
+                                        f"{vless_link}"
+                                    )
+
+                                    return True
+       
+                        except Exception as err:
+                            log.error(
+                                "An error occurred in the "
+                                "X_UI/get_all_list block "
+                                "iterating over values from "
+                                "clients."
+                                f"Error: {err}"
+                            )
+                else:
+                    log.error(
+                        "An error occurred while "
+                        "receiving the list\n"
+                        f"{sep}\n{suc}\n{msg}\n{sep}"
+                    )
+
+                    return False
+                        
+        except Exception as err:
+            log.error(
+                "An error occurred in the "
+                "X_UI/get_vless_link block "
+                "iterating over values from "
+                "realSet_data."
+                f"Error: {err}"
+            )
