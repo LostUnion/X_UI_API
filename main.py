@@ -63,6 +63,7 @@ import json
 from datetime import datetime
 from abc import ABC
 import urllib.parse
+from pathlib import Path
 
 import urllib3
 import requests
@@ -70,7 +71,6 @@ from requests.exceptions import RequestException
 from dotenv import load_dotenv
 
 from logger_settings import logger as log
-from json_loads import loads_json_to_file
 
 # Отключение предупреждения о
 # самоподписном сертефикате.
@@ -234,12 +234,16 @@ class X_UI(API_CLIENT):
                     # в названии дата и время.
                     date = datetime.now()
                     date_now = date.strftime('%Y-%m-%d-%H-%M-%S')
-                    file_name = (
-                        f"config_backups/{date_now}_backup.db"
-                    )
+
+                    folder_backups = Path(os.getenv('BACKUPS_PATH'))
+
+                    if not folder_backups.is_dir():
+                        folder_backups.mkdir(parents=True, exist_ok=True)
+
+                    file_path = folder_backups / f"{date_now}_backup.db"
 
                     # Запись данных бэкапа в файл
-                    with open(file_name, "wb") as file:
+                    with open(file_path, "w") as file:
                         # chunk_size задает размер
                         # части данных (8192 байта),
                         # загружаемой за один раз из
@@ -251,7 +255,7 @@ class X_UI(API_CLIENT):
                             f"[{res.status_code}] - "
                             "The backup data was "
                             "successfully written "
-                            f"to the  \"{file_name}\"file"
+                            f"to the  \"{file_path}\"file"
                         )
 
                         return True
@@ -1384,7 +1388,7 @@ class X_UI(API_CLIENT):
     # Получение vless
     # конфигурации в виде
     # ссылки.
-    def get_vless_link(self, user_id: str):
+    def get_vless_link(self, user_id: str, config_json: bool = False):
         log.info(
             "Getting the vless "
             "configuration as a link"
@@ -1456,7 +1460,7 @@ class X_UI(API_CLIENT):
                                 
                                     # Email пользователя.
                                     user_email = client['email']
-                                    user_email = urllib.parse.quote(connection_remark, safe='')
+                                    user_email = urllib.parse.quote(user_email, safe='')
 
                                     # Из obj берется streamSettings.
                                     sSett_data = json.loads(
@@ -1481,6 +1485,8 @@ class X_UI(API_CLIENT):
                                     # Отпечаток подключения.
                                     settings_fingerprint = realSet['settings']['fingerprint']
 
+                                    settings_spx = realSet['settings']['spiderX']
+
                                     # Название подключения
                                     # (примечание).
                                     connection_remark = j_cont['obj'][0]['remark']
@@ -1491,13 +1497,18 @@ class X_UI(API_CLIENT):
 
                                     # Формирование vless ссылки
                                     # без названия подключения.
+
+                                    type_ = "tcp"
+                                    security = "reality"
+                                    form_settings_spx = urllib.parse.quote(settings_spx, safe='')
+
                                     if connection_remark != "":
                                         vless_link = (
                                             f"vless://{user_id}@{os.getenv('VLESS_HOST')}:"
-                                            f"{os.getenv('VLESS_PORT')}?type=tcp&security="
-                                            f"reality&pkb={settings_publicKey}"
+                                            f"{os.getenv('VLESS_PORT')}?type={type_}&security="
+                                            f"{security}&pkb={settings_publicKey}"
                                             f"&fp={settings_fingerprint}&sni={serverName}"
-                                            f"&sid={shortIds[0]}&spx=%2F&flow={user_flow}"
+                                            f"&sid={shortIds[0]}&spx={form_settings_spx}&flow={user_flow}"
                                             f"#{connection_remark}-{user_email}"
                                         )
                                     
@@ -1506,18 +1517,86 @@ class X_UI(API_CLIENT):
                                     else:
                                         vless_link = (
                                             f"vless://{user_id}@{os.getenv('VLESS_HOST')}:"
-                                            f"{os.getenv('VLESS_PORT')}?type=tcp&security="
-                                            f"reality&pbk={settings_publicKey}"
+                                            f"{os.getenv('VLESS_PORT')}?type={type_}&security="
+                                            f"{security}&pbk={settings_publicKey}"
                                             f"&fp={settings_fingerprint}&sni={serverName}"
-                                            f"&sid={shortIds}&spx=%2F&flow={user_flow}"
+                                            f"&sid={shortIds}&spx={form_settings_spx}&flow={user_flow}"
                                             f"#{user_email}"
                                         )
 
                                     vless_link = vless_link.replace(" ", "%20")
+
                                     log.info(
                                         f"USER ID {user_id} | VLESS LINK\n\n"
                                         f"{vless_link}"
                                     )
+
+                                    # Проверка что
+                                    # config_json True.
+                                    if config_json:
+
+                                        # Формирование JSON
+                                        # объекта.
+                                        config = {
+                                            "inbounds": [
+                                                {
+                                                    "port": 10808,
+                                                    "listen": "127.0.0.1",
+                                                    "protocol": "socks",
+                                                    "settings": {"udp": True}
+                                                }
+                                            ],
+                                            "outbounds": [
+                                                {
+                                                    "protocol": "vless",
+                                                    "settings": {
+                                                        "vnext": [
+                                                            {
+                                                                "address": str(os.getenv('VLESS_HOST')),
+                                                                "port": int(os.getenv('VLESS_PORT')),
+                                                                "users": [
+                                                                    {
+                                                                        "id": str(user_id),
+                                                                        "encryption": "none",
+                                                                        "flow": str(user_flow)
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "streamSettings": {
+                                                        "network": str(type_),
+                                                        "security": str(security),
+                                                        "realitySettings": {
+                                                            "publicKey": str(settings_publicKey),
+                                                            "shortId": str(shortIds),
+                                                            "fingerprint": str(settings_fingerprint),
+                                                            "serverName": str(serverName),
+                                                            "spiderX": settings_spx
+                                                        } if security == "reality" else None
+                                                    }
+                                                }
+                                            ]
+                                        }
+
+                                        config["outbounds"][0]["streamSettings"] = {k: v for k, v in config["outbounds"][0]["streamSettings"].items() if v}
+                                        
+                                        folder_json_config = Path(os.getenv('USER_JSON_CONFIGS_PATH'))
+
+                                        # Проверка наличия папки
+                                        # для хранения конфигураций
+                                        # пользователей.
+                                        if not folder_json_config.is_dir():
+                                            folder_json_config.mkdir(parents=True, exist_ok=True)
+                                            log.info(
+                                                f"Folder {folder_json_config} has been created"
+                                            )
+
+                                        file_path = folder_json_config / f"{user_id}_config.json"
+
+                                        # Запись в файл.
+                                        with open(file_path, 'w') as file:
+                                            json.dump(config, file, indent=4)
 
                                     return True
        
@@ -1526,7 +1605,7 @@ class X_UI(API_CLIENT):
                                 "An error occurred in the "
                                 "X_UI/get_all_list block "
                                 "iterating over values from "
-                                "clients."
+                                "clients. "
                                 f"Error: {err}"
                             )
                 else:
@@ -1543,6 +1622,6 @@ class X_UI(API_CLIENT):
                 "An error occurred in the "
                 "X_UI/get_vless_link block "
                 "iterating over values from "
-                "realSet_data."
+                "realSet_data. "
                 f"Error: {err}"
             )
