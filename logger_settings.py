@@ -1,5 +1,12 @@
+import os
 import logging
+from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения
+# из файла .env в os.environ.
+load_dotenv()
 
 class LoggingColorFormatter(logging.Formatter):
     COLORS = {
@@ -19,8 +26,13 @@ class LoggingColorFormatter(logging.Formatter):
 
 logger = logging.getLogger("keyword_color_logger")
 
+folder_logs = Path(os.getenv('LOGS_PATH'))
+
+if not folder_logs.is_dir():
+    folder_logs.mkdir(parents=True, exist_ok=True)
+
 # Форматирование имени файла с сегодняшней датой
-log_filename = f'logs/{datetime.now().strftime("%Y-%m-%d")}.log'
+log_filename = f'{folder_logs}/{datetime.now().strftime("%Y-%m-%d")}.log'
 
 # Stream handler для консоли (цветной вывод)
 console_handler = logging.StreamHandler()
