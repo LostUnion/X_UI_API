@@ -1,65 +1,20 @@
-#################################################################
-# █████████████████████████████████████████████████████████████ #
-# █░░░░░░░░██░░░░░░░░████████████████░░░░░░██░░░░░░█░░░░░░░░░░█ #
-# █░░▄▀▄▀░░██░░▄▀▄▀░░████████████████░░▄▀░░██░░▄▀░░█░░▄▀▄▀▄▀░░█ #
-# █░░░░▄▀░░██░░▄▀░░░░████████████████░░▄▀░░██░░▄▀░░█░░░░▄▀░░░░█ #
-# ███░░▄▀▄▀░░▄▀▄▀░░██████████████████░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
-# ███░░░░▄▀▄▀▄▀░░░░███░░░░░░░░░░░░░░█░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
-# █████░░▄▀▄▀▄▀░░█████░░▄▀▄▀▄▀▄▀▄▀░░█░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
-# ███░░░░▄▀▄▀▄▀░░░░███░░░░░░░░░░░░░░█░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
-# ███░░▄▀▄▀░░▄▀▄▀░░██████████████████░░▄▀░░██░░▄▀░░███░░▄▀░░███ #
-# █░░░░▄▀░░██░░▄▀░░░░████████████████░░▄▀░░░░░░▄▀░░█░░░░▄▀░░░░█ #
-# █░░▄▀▄▀░░██░░▄▀▄▀░░████████████████░░▄▀▄▀▄▀▄▀▄▀░░█░░▄▀▄▀▄▀░░█ #
-# █░░░░░░░░██░░░░░░░░████████████████░░░░░░░░░░░░░░█░░░░░░░░░░█ #
-# █████████████████████████████████████████████████████████████ #
-# ------------------------------------------------------------- #
-# ----------------------ПОДКЛЮЧЕНИЕ К X-UI--------------------- #
-# conn = X_UI(                                                  #
-#     x_ui_login="YOUR LOGIN",                                  #
-#     x_ui_password="YOUR PASSWORD",                            #
-#     x_ui_link="YOUR X-UI LINK"                                #
-# )                                                             #
-# conn.session_up()                                             #
-# При ответе 200, сессия считается запущенной.                  #
-# -------------------------УПРАВЛЕНИЕ-------------------------- #
-# Получение информации о системе:                               #
-# conn.get_system_status()                                      #
-#                                                               #
-# Получение всех подключений и пользователей.                   #
-# conn.get_all_list()                                           #
-#                                                               #
-# Получение всех подключений и пользователей.                   #
-# conn.get_all_list()                                           #
-#                                                               #
-# Остановка xray. / Работает если отключен перезапуск.          #
-# conn.xray_stop()                                              #
-#                                                               #
-# Перезапуск xray.                                              #
-# conn.xray_restart()                                           #
-#                                                               #
-# Запуск xray.                                                  #
-# conn.xray_start()                                             #
-#                                                               #
-# Добавление пользователя.                                      #
-# conn.add_client(                                              #
-#       connection_id: int,               ID подключения        #
-#       flow: str,                        Режим                 #
-#       email: str,                       Почта или название    #
-#       limit_ip: int,                    Лимит по IP           #
-#       totalGB: float,                   Лимит по GB           #
-#       expirtyTime: int,                 Количество дней       #
-#       enable: bool,                     Включен или нет       #
-#       tgId: int,                        ID Telegram           #
-#       comment: str                      Комментарий           #
-#     )                                                         #
-# Получение ссылки vless                                        #
-# conn.get_vless_link(user_id: str)      ID клиента             #
-#################################################################
+#########################################################################
+#  __    __         __    __  ______         ______   _______   ______  #
+# /  |  /  |       /  |  /  |/      |       /      \ /       \ /      | #
+# $$ |  $$ |       $$ |  $$ |$$$$$$/       /$$$$$$  |$$$$$$$  |$$$$$$/  #
+# $$  \/$$/ ______ $$ |  $$ |  $$ | ______ $$ |__$$ |$$ |__$$ |  $$ |   #
+#  $$  $$< /      |$$ |  $$ |  $$ |/      |$$    $$ |$$    $$/   $$ |   #
+#   $$$$  \$$$$$$/ $$ |  $$ |  $$ |$$$$$$/ $$$$$$$$ |$$$$$$$/    $$ |   #
+#  $$ /$$  |       $$ \__$$ | _$$ |_       $$ |  $$ |$$ |       _$$ |_  #
+# $$ |  $$ |       $$    $$/ / $$   |      $$ |  $$ |$$ |      / $$   | #
+# $$/   $$/         $$$$$$/  $$$$$$/       $$/   $$/ $$/       $$$$$$/  #
+#########################################################################
 
-import os
 import uuid
 import time
 import json
+import base64
+import secrets
 from datetime import datetime
 from abc import ABC
 import urllib.parse
@@ -67,87 +22,92 @@ from pathlib import Path
 
 import urllib3
 import requests
+from nacl.public import PrivateKey
 from requests.exceptions import RequestException
-from dotenv import load_dotenv
 
+from config import Config
 from logger_settings import logger as log
 
-# Отключение предупреждения о
-# самоподписном сертефикате.
+# Disabling the self-signed
+# certificate warning.
 urllib3.disable_warnings(
     urllib3.exceptions.InsecureRequestWarning
 )
 
-# Загрузка переменных окружения
-# из файла .env в os.environ.
-load_dotenv()
-
-vless_host = str(os.getenv('VLESS_HOST'))
-vless_port = str(os.getenv('VLESS_PORT'))
 
 class API_CLIENT(ABC):
     def __init__(self):
         self.session = requests.Session()
+
 
 class X_UI(API_CLIENT):
     def __init__(self,
                  x_ui_login: str,
                  x_ui_password: str,
                  x_ui_link: str):
-        
+
         super().__init__()
         self.x_ui_login = x_ui_login
         self.x_ui_password = x_ui_password
         self.x_ui_link = x_ui_link
+        self.authenticated = self.session_up()
 
-    # Поднятие сессии и запись
-    # cookies после авторизации.
+    # Raising the session and
+    # recording cookies after
+    # authorization.
     def session_up(self):
         log.info(
             f"Connecting to \"{self.x_ui_link}\""
         )
 
         try:
-            # Авторизация в панели x-ui.
+            # Authorization
+            # in the x-ui panel.
             res = self.session.post(
                 url=f"{self.x_ui_link}/login",
                 json={
                     "username": self.x_ui_login,
                     "password": self.x_ui_password
                 },
-                # Пропуск проверки
-                # самоподписного сертификата.
-                verify=False
+                # Skipping the verification
+                # of a self-signed certificate.
+                verify=False,
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
+                stream=True
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
-                
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
+
+                # Converting the binary
+                # response from the server
+                # to JSON format.
                 j_cont = json.loads(res.content)
 
-                # Формирование сообщения
-                # для вывода пользователю
-                # и записи в лог.
+                # Generating a message
+                # for output to the user
+                # and writing to the log.
                 suc = f"SUCCESS: {j_cont['success']}"
                 msg = f"MESSAGE: {j_cont['msg']}"
 
-                # Сепаратор для визуального разграничения.
+                # A separator for visual
+                # differentiation.
                 sep = '-' * (len(str(suc)) + len(str(msg)))
 
-                # Проверка что в success
-                # от сервера True.
+                # Checking that success
+                # from the server is True.
                 if j_cont['success']:
                     log.info(
                         'Authorization was successful\n'
                         f'{sep}\n{suc}\n{msg}\n{sep}'
                     )
 
-                    # Сбор cookies данных из
-                    # сессии, после авторизации.
+                    # Collecting cookie data
+                    # from the session after
+                    # authorization.
                     cookies = [
                         {
                             "domain": k.domain,
@@ -158,42 +118,43 @@ class X_UI(API_CLIENT):
                         for k in self.session.cookies
                     ]
 
-                    # Установка данных cookies в сессию
-                    # для последующего использования.
+                    # Installation of these
+                    # cookies in the session
+                    # for later use.
                     for cookie in cookies:
                         self.session.cookies.set(**cookie)
 
-                    # Информационное сообщение
-                    # после установки cookies.
+                    # An informational message
+                    # after installing cookies.
                     log.info(
-                        f"[{res.status_code}] - "
                         "Cookies have been installed"
                     )
 
                     return True
-                
+
                 else:
-                    # Информационное сообщение
-                    # если success было False.
+                    # An informational message
+                    # if success was False.
                     log.error(
                         'Authorization failed\n'
                         f'{sep}\n{suc}\n{msg}\n{sep}'
                     )
 
-                    return False
-                
+                    quit()
+
             else:
-                # Информационное сообщение
-                # если res.status_code != 200.
+                # Information message if
+                # res.status_code != 200.
                 log.error(
                     f'Status code [{res.status_code}]'
                     )
 
                 return False
-            
+
         except RequestException as err:
-            # Вывод места и самой
-            # ошибки в лог.
+            # Output of the location
+            # and the error itself to
+            # the log.
             log.error(
                 "An error has occurred in "
                 "the X_UI/session_up progr"
@@ -202,7 +163,7 @@ class X_UI(API_CLIENT):
 
             return False
 
-    # Скачивание бекапов подключений.
+    # Downloading connection backups.
     def export_conf_backups(self):
         log.info(
             "Getting a backup of "
@@ -210,70 +171,83 @@ class X_UI(API_CLIENT):
         )
 
         try:
-            # Запрос на получение
-            # конфигурационных данных пользователей.
+            # Request to receive user
+            # configuration data.
             res = self.session.get(
                 url=f"{self.x_ui_link}/server/getDb",
-                # Пропуск проверки
-                # самоподписного сертификата.
+                # Skipping the verification
+                # of a self-signed certificate.
                 verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
                 stream=True
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
 
-                # Проверка что от сервера пришел какой-либо текст.
+                # Checking that any text has
+                # been received from the server.
                 if res.content:
 
-                    # Именование бэкап файла,
-                    # в названии дата и время.
+                    # Naming of the backup file,
+                    # with date and time in the
+                    # name.
                     date = datetime.now()
                     date_now = date.strftime('%Y-%m-%d-%H-%M-%S')
 
-                    folder_backups = Path(os.getenv('BACKUPS_PATH'))
+                    # Getting the backup
+                    # file save path.
+                    folder_backups = Path(Config.X_UI_BACKUPS_PATH)
 
+                    # Checking the existence
+                    # of the backup folder.
                     if not folder_backups.is_dir():
+                        # Creating a folder if
+                        # it doesn't exist.
                         folder_backups.mkdir(parents=True, exist_ok=True)
 
+                    # The absolute path of
+                    # saving the backup file.
                     file_path = folder_backups / f"{date_now}_backup.db"
 
-                    # Запись данных бэкапа в файл
-                    with open(file_path, "w") as file:
-                        # chunk_size задает размер
-                        # части данных (8192 байта),
-                        # загружаемой за один раз из
-                        # ответа.
+                    # Writing backup data to a file.
+                    with open(file_path, "wb") as file:
+                        # chunk_size sets the size
+                        # of the data portion (8192 bytes)
+                        # loaded at a time from the response.
                         for chunk in res.iter_content(chunk_size=8192):
                             file.write(chunk)
 
+                        # Information output to the
+                        # user that the data has been
+                        # written to a file.
                         log.info(
                             f"[{res.status_code}] - "
                             "The backup data was "
                             "successfully written "
-                            f"to the  \"{file_path}\"file"
+                            f"to the \"{file_path}\"file"
                         )
 
-                        return True
+                        return True, file_path
 
                 else:
-                    # Информирование пользователя
-                    # что запрос пришел со статусом 200,
-                    # но ничего не вернул в ответе.
-                    log.error(
+                    # Informing the user that the
+                    # request came with the status 200,
+                    # but did not return anything in the
+                    # response.
+                    log.warning(
                         f"[{res.status_code}]"
                         " - The request was successful, "
                         "but the server returned nothing."
                     )
                     return False
             else:
-                # Информирование пользователя
-                # что произошла ошибка при
-                # скачивании бэкапа.
+                # Informing the user that an error
+                # has occurred while downloading the
+                # backup.
                 log.error(
                     f"[{res.status_code}]"
                     " - Failed to download backup"
@@ -282,8 +256,9 @@ class X_UI(API_CLIENT):
                 return False
 
         except RequestException as err:
-            # Вывод места и самой
-            # ошибки в лог.
+            # Output of the location
+            # and the error itself to
+            # the log.
             log.error(
                 "An error has occurred in the "
                 "X_UI/export_conf_backups prog"
@@ -292,17 +267,19 @@ class X_UI(API_CLIENT):
 
             return False
 
-    # Формирование таблицы для
-    # вывода пользователю.
+    # Creating a table
+    # for log output.
     def table_collection(self, data):
         try:
-            # Подсчет максимальной длинны метрик.
+            # Calculating the maximum
+            # length of metrics.
             max_len_metric = max(len(str(item[0])) for item in data)
 
-            # Подсчет максимальной длинны значений.
+            # Calculating the maximum
+            # length of values.
             max_len_value = max(len(str(item[1])) for item in data)
 
-            # Вывод тайтлов.
+            # Output of titles.
             log.info(
                 f"+{'-' * (max_len_metric + 2)}"
                 f"+{'-' * (max_len_value + 2)}+"
@@ -318,14 +295,15 @@ class X_UI(API_CLIENT):
                 f"+{'-' * (max_len_value + 2)}+"
             )
 
-            # Перебор и вывод значений.
+            # Iterating through and
+            # outputting values.
             for metric, value in data:
                 log.info(
                     f"| {metric.ljust(max_len_metric)} |"
                     f" {str(value).ljust(max_len_value)} |"
-            )
+                )
 
-            # Конечная сепарация.
+            # Final separation.
             log.info(
                 f"+{'-' * (max_len_metric + 2)}"
                 f"+{'-' * (max_len_value + 2)}+"
@@ -334,157 +312,164 @@ class X_UI(API_CLIENT):
             return True
 
         except Exception as err:
+            # Output of the location
+            # and the error itself to
+            # the log.
             log.error(
                 "An error has occurred in the "
                 "X_UI/table_collection prog"
                 f"ram block: {err}"
             )
 
-    # Получение статистики всей системы.
+    # Getting statistics for
+    # the entire system.
     def get_system_status(self):
         log.info(
             "Getting statistics on the system"
         )
 
         try:
-            # Запрос на получение
-            # всех данных по системе x-ui.
+            # A request to receive all
+            # data on the x-ui system.
             res = self.session.post(
                 url=f"{self.x_ui_link}/server/status",
-                # Пропуск проверки
-                # самоподписного сертификата.
+                # Skipping the verification
+                # of a self-signed certificate.
                 verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
                 stream=True
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
 
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
+                # Converting the binary
+                # response from the server
+                # to JSON format.
                 j_cont = json.loads(res.content)
 
-                # Формирование сообщения
-                # для вывода пользователю
-                # и записи в лог.
+                # Generating a message
+                # for output to the user
+                # and writing to the log.
                 suc = f"SUCCESS: {j_cont['success']}"
                 msg = f"MESSAGE: {j_cont['msg']}"
 
-                # Сепаратор для визуального разграничения.
+                # A separator for visual
+                # differentiation.
                 sep = '-' * (len(str(suc)) + len(str(msg)))
 
-                # Проверка что в success
-                # от сервера True.
+                # Checking that success
+                # from the server is True.
                 if j_cont['success']:
 
+                    # Getting an object from a
+                    # response from the server.
                     obj_data = j_cont['obj']
 
-                    # Данные по процессору ##########################
+                    # -- CPU DATA --
 
-                    # Идентификатор процессора,
-                    # который может быть 0 для
-                    # основного ядра.
+                    # ID of the processor,
+                    # which can be 0 for the
+                    # main core.
                     cpu_id = obj_data['cpu']
 
-                    # Количество физических
-                    # ядер процессора.
+                    # The number of physical
+                    # processor cores.
                     cpu_core = obj_data['cpuCores']
 
-                    # Количество логических
-                    # процессоров.
+                    # The number of logical
+                    # processor cores.
                     cpu_logic = obj_data['logicalPro']
 
-                    # Частота процессора в
-                    # мегагерцах.
+                    # Processor frequency
+                    # in megahertz.
                     cpu_speed_Mhz = obj_data['cpuSpeedMhz']
 
-                    # Средняя нагрузка на
-                    # процессор за последние
-                    # 1, 5 и 15 минут.
-                    cpu_leeds = obj_data['loads']                          
+                    # The average CPU load
+                    # over the last
+                    # 1, 5, and 15 minutes.
+                    cpu_leeds = obj_data['loads']
 
-                    # Данные по оперативной памяти ##################
+                    # -- RAM DATA --
 
-                    # Текущая используемая память.
+                    # The current memory used.
                     ram_curr = obj_data['mem']['current']
 
-                    # Общая памятью.
-                    ram_total = obj_data['mem']['total']                  
+                    # Shared memory.
+                    ram_total = obj_data['mem']['total']
 
-                    # Данные по подкачке ############################
+                    # -- SWAP DATA --
 
-                    # Текущее использование подкачки
+                    # Current swap usage.
                     swap_curr = obj_data['swap']['current']
 
-                    # Общая память подкачки
+                    # Shared swap memory.
                     swap_total = obj_data['swap']['total']
 
-                    # Данные по диску ###############################
+                    # -- HDD/SSD DATA --
 
-                    # Текущая используемая дисковая память
+                    # Current disk memory used.
                     disk_curr = obj_data['disk']['current']
 
-                    # Общая дисковая память
+                    # Shared disk memory
                     disk_total = obj_data['disk']['total']
 
-                    # Состояние xray ################################
+                    # -- THE STATE OF THE XRAY SERVICE --
 
-                    # Статус xray
+                    # Xray status.
                     xray_status = obj_data['xray']['state']
 
-                    # Сообщения об ошибках
+                    # Error messages.
                     xray_errMsg = obj_data['xray']['errorMsg']
 
-                    # Версия xray
+                    # Xray version.
                     xray_version = obj_data['xray']['version']
 
-                    # Время работы xray системы в секундах
+                    # Operating time of the xray system in seconds.
                     uptime = obj_data['uptime']
 
-                    # Сетевые соединения ############################
+                    # -- NETWORK CONNECTIONS --
 
-                    # Количество TCP-соединений
+                    # Number of TCP connections.
                     tcp_count = obj_data['tcpCount']
 
-                    # Количество UDP-соединений
+                    # Number of UDP connections.
                     udp_count = obj_data['udpCount']
-                    
-                    # Сетевой трафик ################################
 
-                    # Отправлено байт в данный момент
+                    # -- NETWORK TRAFFIC --
+
+                    # Bytes sent at the moment.
                     netIO_up = obj_data['netIO']['up']
 
-                    # Получено байт в данный момент
+                    # Bytes received at the moment.
                     netIO_down = obj_data['netIO']['down']
 
-                    # Отправлено байт за все время
+                    # Bytes sent for all time.
                     netTraffic_sent = obj_data['netTraffic']['sent']
 
-                    # Получено байт за все время
+                    # Bytes received for all time.
                     netTraffic_recv = obj_data['netTraffic']['recv']
 
-                    # Публичный IP ##################################
+                    # -- PUBLIC IP ADDRESS --
 
-                    # Публичный IP-адрес IPv4
+                    # IPv4 Public IP Address.
                     publicIP_ipv4 = obj_data['publicIP']['ipv4']
 
-                    # Публичный IP-адрес IPv6
+                    # IPv6 Public IP Address.
                     publicIP_ipv6 = obj_data['publicIP']['ipv6']
 
-                    # Статистика приложения ##########################
+                    # -- APPLICATION STATISTICS --
 
-                    # Статистика по использованию потоков в приложении
+                    # Statistics on the usage of streams in the application.
                     app_stats_threads = obj_data['appStats']['threads']
 
-                    # Статистика по использованию памяти в приложении
+                    # Statistics on memory usage in the application.
                     app_stats_mem = obj_data['appStats']['mem']
 
-                    # Общее время работы приложения
+                    # The total running time of the application.
                     app_stats_uptime = obj_data['appStats']['uptime']
 
                     data = [
@@ -526,19 +511,49 @@ class X_UI(API_CLIENT):
                         ["APP STATISTIC - Uptime", app_stats_uptime]
                     ]
 
-                    # Проверка что переданные
-                    # данные сформировались в
-                    # таблицу.
+                    returned_data = {
+                        "cpu_id": cpu_id,
+                        "cpu_core": cpu_core,
+                        "cpu_logic": cpu_logic,
+                        "cpu_speed_Mhz": cpu_speed_Mhz,
+                        "cpu_load": ', '.join(map(str, cpu_leeds)),
+                        "ram_curr": ram_curr,
+                        "ram_total": ram_total,
+                        "swap_curr": swap_curr,
+                        "swap_total": swap_total,
+                        "disk_curr": disk_curr,
+                        "disk_total": disk_total,
+                        "xray_status": xray_status,
+                        "xray_errMsg": xray_errMsg,
+                        "xray_version": xray_version,
+                        "uptime": uptime,
+                        "tcp_count": tcp_count,
+                        "udp_count": udp_count,
+                        "netIO_up": netIO_up,
+                        "netIO_down": netIO_down,
+                        "netTraffic_sent": netTraffic_sent,
+                        "netTraffic_recv": netTraffic_recv,
+                        "publicIP_ipv4": publicIP_ipv4,
+                        "publicIP_ipv6": publicIP_ipv6,
+                        "publicIP_ipv6": publicIP_ipv6,
+                        "app_stats_threads": app_stats_threads,
+                        "app_stats_mem": app_stats_mem,
+                        "app_stats_uptime": app_stats_uptime,
+                    }
+
+                    # Checking that the transmitted
+                    # data has been generated in a
+                    # table.
                     if self.table_collection(data):
                         log.info(
                             "The system statistics data "
                             "was recorded in the .log file."
                         )
 
-                        return True
+                        return True, returned_data
 
-                    # Если данные не были
-                    # сформированы, ошибка.
+                    # If the data has not been
+                    # generated, an error occurs.
                     else:
                         log.error(
                             "An error occurred when displaying"
@@ -548,8 +563,8 @@ class X_UI(API_CLIENT):
                         return False
 
                 else:
-                    # Информационное сообщение
-                    # если success было False.
+                    # An informational message
+                    # if success was False.
                     log.error(
                         'Collecting table failed\n'
                         f'{sep}\n{suc}\n{msg}\n{sep}'
@@ -558,9 +573,9 @@ class X_UI(API_CLIENT):
                     return False
 
             else:
-                # Информирование пользователя
-                # что произошла ошибка при
-                # получении статистики x-ui.
+                # Informing the user that an
+                # error occurred when receiving
+                # x-ui statistics.
                 log.error(
                     f"[{res.status_code}]"
                     " - Error when getting "
@@ -570,8 +585,9 @@ class X_UI(API_CLIENT):
                 return False
 
         except RequestException as err:
-            # Вывод места и самой
-            # ошибки в лог.
+            # Output of the location
+            # and the error itself to
+            # the log.
             log.error(
                 "An error has occurred in the "
                 "X_UI/get_system_status prog"
@@ -580,92 +596,154 @@ class X_UI(API_CLIENT):
 
             return False
 
-    # Получение данных о всех
-    # подключениях и пользователях.
-    def get_all_list(self):
+    # Getting data about
+    # all connections.
+    def get_connections(self, get_clients: bool = False):
         log.info(
             "Getting a list of connections"
         )
 
         try:
-            # Запрос на получение
-            # всех данных по подключениям
-            # и пользователям.
+            # Request to receive all connections.
             res = self.session.post(
                 url=f"{self.x_ui_link}/panel/inbound/list",
-                # Пропуск проверки
-                # самоподписного сертификата.
+                # Skipping the verification
+                # of a self-signed certificate.
                 verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
                 stream=True
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
 
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
+                # Converting the binary
+                # response from the server
+                # to JSON format.
                 j_cont = json.loads(res.content)
 
-                # Формирование сообщения
-                # для вывода пользователю
-                # и записи в лог.
+                # Generating a message
+                # for output to the user
+                # and writing to the log.
                 suc = f"SUCCESS: {j_cont['success']}"
                 msg = f"MESSAGE: {j_cont['msg']}"
 
-                # Сепаратор для визуального разграничения.
-                sep = '-' * (
-                    len(str(suc)) + len(str(msg))
-                )
+                # A separator for visual
+                # differentiation.
+                sep = '-' * (len(str(suc)) + len(str(msg)))
 
-                # Проверка что в success
-                # от сервера True.
+                # Checking that success
+                # from the server is True.
                 if j_cont['success']:
 
                     obj_data = j_cont['obj']
 
-                    # Перебор всех значений из obj.
+                    all_connections = []
+                    all_clients = []
+
+                    # Iterating through all the values from obj.
                     for iter_obj in obj_data:
-                        # Сбор всех данных
-                        # по подключениям.
+                        # Collecting all
+                        # connection data.
                         try:
-                            # Данные по подключению ##########################
+                            # -- CONNECTION INFORMATION --
+
+                            # Connection ID.
                             conn_id = iter_obj['id']
 
-                            # ID подключения.
-                            conn_id = iter_obj['id']
-
-                            # Наименование подключения.
+                            # Connection name.
                             conn_remark = iter_obj['remark']
 
-                            # Проверка на то,
-                            # запущено ли подключение.
+                            # Checking whether the
+                            # connection has been
+                            # restarted.
                             conn_enable = iter_obj['enable']
 
-                            # Порт подключения.
+                            # Connection port.
                             conn_port = iter_obj['port']
 
-                            # Протокол подключения.
+                            # Connection protocol.
                             conn_protocol = iter_obj['protocol']
 
                             conn_up = iter_obj['up']
                             conn_down = iter_obj['down']
 
-                            # Подсчет количества
-                            # пользователей на
-                            # данном подключении.
-                            clientStats = len(
-                                [cli for cli in iter_obj['clientStats']]
-                            )
+                            # Settings is taken from obj.
+                            sett_data = json.loads(iter_obj['settings'])
 
-                            # Создание пары ключа и
-                            # значения для формирования
-                            # таблицы для вывода пользователю.
-                            data_conn = [
+                            # streamSettings is taken from obj.
+                            streamSett = json.loads(iter_obj['streamSettings'])
+
+                            conn_network = streamSett['network']
+
+                            conn_security = streamSett['security']
+                            conn_externProxy = streamSett['externalProxy']
+
+                            # realitySettings is taken from streamSettings.
+                            realitySettings = streamSett['realitySettings']
+
+                            # -
+                            real_show = realitySettings['show']
+
+                            # -
+                            real_xver = realitySettings['xver']
+
+                            # - Destination.
+                            real_dest = realitySettings['dest']
+
+                            # Which service is being disguised as.
+                            real_serverNames = realitySettings['serverNames']
+
+                            # The private connection key.
+                            real_privateKey = realitySettings['privateKey']
+
+                            # The minimum allowed number
+                            # of clients per connection.
+                            real_minClient = realitySettings['minClient']
+
+                            # The maximum allowed number
+                            # of clients per connection.
+                            real_maxClient = realitySettings['maxClient']
+
+                            # The maximum time interval.
+                            real_maxTimediff = realitySettings['maxTimediff']
+
+                            # Short identifiers.
+                            real_shortIds = realitySettings['shortIds']
+
+                            real_settings = realitySettings['settings']
+
+                            real_sett_publicKey = real_settings['publicKey']
+
+                            real_sett_fingprnt = real_settings['fingerprint']
+
+                            real_sett_serverName = real_settings['serverName']
+
+                            real_sett_spiderX = real_settings['spiderX']
+
+                            clients = sett_data['clients']
+
+                            # Client counter on activation.
+                            clients_count = 0
+                            for client in sett_data['clients']:
+                                client['publicKey'] = real_sett_publicKey
+                                client['privateKey'] = real_privateKey
+
+                                client['type'] = conn_network
+                                client['security'] = conn_security
+                                client['fingerprint'] = real_sett_fingprnt
+                                client['serverName'] = real_serverNames[0]
+                                client['shortIds'] = real_shortIds[0]
+                                client['SpiderX'] = real_sett_spiderX
+                                client['Remark'] = conn_remark
+
+                                all_clients.append(client)
+                                clients_count += 1
+
+                            data = [
                                 ["Connection ID", conn_id],
                                 ["Name", conn_remark],
                                 ["Enable", conn_enable],
@@ -673,224 +751,90 @@ class X_UI(API_CLIENT):
                                 ["Protocol", conn_protocol],
                                 ["Up", conn_up],
                                 ["Down", conn_down],
-                                ["clientStats", clientStats]
+                                ["Clients", clients_count],
+                                ["Network", conn_network],
+                                ["Security", conn_security],
+                                ["External Proxy", conn_externProxy],
+                                ["Show", real_show],
+                                ["Xver", real_xver],
+                                ["Dest", real_dest],
+                                ["Server Name", real_serverNames],
+                                ["Private Key", real_privateKey],
+                                ["Min Clients", real_minClient],
+                                ["Max Clients", real_maxClient],
+                                ["Max Timediff", real_maxTimediff],
+                                ["Short Ids", real_shortIds],
+                                ["Public Key", real_sett_publicKey],
+                                ["Fingerprint", real_sett_fingprnt],
+                                ["Server Name", real_sett_serverName],
+                                ["Spider X", real_sett_spiderX]
                             ]
 
-                            # Проверка что переданные
-                            # данные сформировались в
-                            # таблицу.
-                            if self.table_collection(data_conn) == False:
-                                log.error(
-                                    "The data_conn data was "
-                                    "not generated in the table"
-                                )
+                            returned_data = {
+                                "conn_id": conn_id,
+                                "conn_remark": conn_remark,
+                                "conn_enable": conn_enable,
+                                "conn_port": conn_port,
+                                "conn_protocol": conn_protocol,
+                                "conn_up": conn_up,
+                                "conn_down": conn_down,
+                                "clients_count": clients_count,
+                                "conn_network": conn_network,
+                                "conn_security": conn_security,
+                                "conn_externalProxy": conn_externProxy,
+                                "real_show": real_show,
+                                "real_xver": real_xver,
+                                "real_dest": real_dest,
+                                "real_serverNames": real_serverNames,
+                                "real_privateKey": real_privateKey,
+                                "real_minClient": real_minClient,
+                                "real_maxClient": real_maxClient,
+                                "real_maxTimediff": real_maxTimediff,
+                                "real_shortIds": real_shortIds,
+                                "real_sett_publicKey": real_sett_publicKey,
+                                "real_sett_fingerprint": real_sett_fingprnt,
+                                "real_sett_serverName": real_sett_serverName,
+                                "real_sett_spiderX": real_sett_spiderX,
+                                "clients": clients
+                            }
 
-                            else:
+                            # Checking that the transmitted
+                            # data has been generated in a
+                            # table.
+
+                            if get_clients:
                                 pass
 
-                        except Exception as err:
-                           log.error(
-                           "An error occurred in the "
-                           "X_UI/get_all_list block "
-                           "iterating over values from obj."
-                           f"Error: {err}"
-                           )
-
-                        
-                        # Сбор всех данных
-                        # по пользователям.
-                        try:
-                            # Преобразование бинарного
-                            # ответа от сервера в JSON
-                            # формат.
-
-                            # Из obj берется settings.
-                            # sett_data = iter_obj['settings']
-                            sett_data = json.loads(iter_obj['settings'])
-
-                            # Сбор клиентов на подключении.
-                            clients = sett_data['clients']
-
-                            # Информационный вывод пользователю
-                            # что сейчас будут выведены все
-                            # пользователи.
-                            log.info(
-                                    "Getting all users"
-                                )
-                            
-                            # Перебор всех клиентов
-                            # которые присутствуют
-                            # в settings.
-                            for client in clients:
-
-                                # Уникальный UUID клиента.
-                                user_id = client['id']
-
-                                # Какой режим используется.
-                                user_flow = client['flow']
-
-                                # Email пользователя.
-                                user_email = client['email']
-
-                                # Лимит по IP.
-                                user_limit_ip = client['limitIp']
-
-                                # Какие ограничения по трафику.
-                                user_totalGB = client['totalGB']
-
-                                # Время истечения срока действия (0 бесконечный).
-                                user_expiryTime = client['expiryTime']
-
-                                # ID пользователя в телеграм.
-                                user_tgId = client['tgId']
-
-                                # Вспомогательный ID пользователя.
-                                user_subId = client['subId']
-
-                                # Комментарий.
-                                user_comment = client['comment']    
-
-                                # Сколько раз сбрасывались настройки пользователя
-                                user_reset = client['reset']
-
-                                # Создание пары ключа и
-                                # значения для формирования
-                                # таблицы для вывода пользователю.
-                                user_data = [
-                                    ["User ID", user_id],
-                                    ["Flow", user_flow],
-                                    ["Email", user_email],
-                                    ["Limit IP", user_limit_ip],
-                                    ["Total GB", user_totalGB],
-                                    ["Expiry Time", user_expiryTime],
-                                    ["TG ID", user_tgId],
-                                    ["Sub ID", user_subId],
-                                    ["Comment", user_comment],
-                                    ["Reset", user_reset],
-                                ]
-
-                                # Проверка что переданные
-                                # данные сформировались в
-                                # таблицу.
-                                if self.table_collection(user_data) == False:
-                                    log.error(
-                                        "The user_data data was "
-                                        "not generated in the table"
-                                    )
-
-                                else:
+                            else:
+                                if self.table_collection(data):
                                     pass
 
+                                # If the data has not been
+                                # generated, an error occurs.
+                                else:
+                                    log.error(
+                                        "An error occurred when "
+                                        "displaying the connection table"
+                                    )
+
+                                all_connections.append(returned_data)
+
+                        # Output of the location
+                        # and the error itself to
+                        # the log.
                         except Exception as err:
                             log.error(
                                 "An error occurred in the "
-                                "X_UI/get_all_list block "
-                                "iterating over values from "
-                                "clients."
+                                "X_UI/get_connections block "
+                                "iterating over values from obj. "
                                 f"Error: {err}"
                             )
 
-                        # Информационный вывод пользователю
-                        # что сейчас будут выведены все
-                        # значения из realitySettings.
-                        log.info(
-                            "Getting reality settings"
-                        )
+                        continue
 
-                        # Сбор всех данных
-                        # по streamSettings.
-                        try:
+                    if all_connections is not None:
+                        return True, all_connections, all_clients
 
-                            # Из obj берется streamSettings.
-                            sSett_data = json.loads(
-                                iter_obj['streamSettings']
-                            )
-
-                            # Из streamSettings
-                            # берется realitySettings.
-                            realSet = sSett_data['realitySettings']
-
-                            show = realSet['show']
-
-                            xver = realSet['xver']
-
-                            # Место назначения
-                            dest = realSet['dest']
-
-                            # Под какой сервис
-                            # происходит маскировка.
-                            serverNames = realSet['serverNames'][0]
-                            
-                            # Приватный ключ
-                            # подключения.
-                            privateKey = realSet['privateKey']
-                            
-                            # Минимально допустимое
-                            # количество клиентов на
-                            # подключении.
-                            minClient = realSet['minClient']
-                            
-                            # Максимально допустимое
-                            # количество клиентов на
-                            # подключении.
-                            maxClient = realSet['maxClient']
-                            
-                            # Максимальный временной
-                            # интервал.
-                            maxTimediff = realSet['maxTimediff']
-
-                            # Короткие идентификаторы.
-                            shortIds = realSet['shortIds']
-                            
-                            # Публичный ключ
-                            # подключения.
-                            settings_publicKey = realSet['settings']['publicKey']
-
-                            # Отпечаток подключения.
-                            settings_fingerprint = realSet['settings']['fingerprint']
-
-                            # Имя сервера.
-                            settings_serverName = realSet['settings']['serverName']
-
-                            settings_spiderX = realSet['settings']['spiderX']
-                            
-
-                            realSet_data = [
-                                ["Show", show],
-                                ["Xver", xver],
-                                ["Dest", dest],
-                                ["Servers Name", serverNames],
-                                ["Private Key", privateKey],
-                                ["Public Key", settings_publicKey],
-                                ["Min Client", minClient],
-                                ["Max Client", maxClient],
-                                ["Max Timediff", maxTimediff],
-                                ["Short Ids", shortIds[0]],
-                                ["Finger Print", settings_fingerprint],
-                                ["Server Name", settings_serverName],
-                                ["Spider X", settings_spiderX]
-                            ]
-
-                            # Проверка что переданные
-                            # данные сформировались в
-                            # таблицу.
-                            if self.table_collection(realSet_data) == False:
-                                log.error(
-                                    "The realSet_data data was "
-                                    "not generated in the table"
-                                )
-                            
-                            else:
-                                pass
-
-                        except Exception as err:
-                            log.error(
-                                "An error occurred in the "
-                                "X_UI/get_all_list block "
-                                "iterating over values from "
-                                "realSet_data."
-                                f"Error: {err}"
-                            )
                 else:
                     log.error(
                         "An error occurred while "
@@ -905,199 +849,647 @@ class X_UI(API_CLIENT):
                     "occurred when accessing the "
                     "server"
                 )
-                
+
                 return False
+
+        # Output of the location
+        # and the error itself to
+        # the log.
         except RequestException as err:
             log.error(
                 "An error has occurred in the "
-                "X_UI/get_all_list"
+                "X_UI/get_connections "
                 f"program block: {err}"
             )
 
-    # Проверка активности xray
-    def xray_parse_active(self):
+    # Getting all clients.
+    def get_clients(self):
         log.info(
-            "Getting xray status"
+            "Getting all clients"
         )
 
         try:
-            # Запрос на получение
-            # всех данных по системе x-ui.
-            res = self.session.post(
-                url=f"{self.x_ui_link}/server/status",
-                # Пропуск проверки
-                # самоподписного сертификата.
-                verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
-                stream=True
-            )
+            # Calling the get_connections method.
+            # The result of the method call is
+            # saved to the all_clients variable.
+            all_clients = self.get_connections(get_clients=True)
 
-            # Проверка успешного
-            # ответа от сервера.
-            if res.status_code == 200:
+            # The third element (index 2) is taken
+            # from the received data and stored in
+            # the clients variable.
+            clients = all_clients[2]
 
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
-                j_cont = json.loads(res.content)
+            all_clients_data = []
 
-                # Проверка что в success
-                # от сервера True.
-                if j_cont['success']:
+            # Going through all the clients.
+            for client in clients:
+                client_comment = client['comment']
+                client_email = client['email']
+                client_enable = client['enable']
+                client_expiryTime = client['expiryTime']
+                client_flow = client['flow']
+                client_limitIp = client['limitIp']
+                client_id = client['id']
+                client_reset = client['reset']
+                client_subId = client['subId']
+                client_tgId = client['tgId']
+                client_totalGB = client['totalGB']
+                client_publicKey = client['publicKey']
+                client_privateKey = client['privateKey']
+                client_type = client['type']
+                client_security = client['security']
+                client_fingerprint = client['fingerprint']
+                client_serverName = client['serverName']
+                client_shortIds = client['shortIds']
+                client_spx = client['SpiderX']
+                client_remark = client['Remark']
 
-                    obj_data = j_cont['obj']
+                # Replacing an empty value
+                # and special characters.
+                client_remark = urllib.parse.quote(client_remark, safe='')
+                client_spx = urllib.parse.quote(client_spx, safe='')
 
-                    # Статус xray
-                    xray_status = obj_data['xray']['state']
+                # Generating a vless link
+                # with client_remark.
+                if client_remark != "":
+                    client_vless_link = (
+                        f"vless://{client_id}@{Config.VLESS_HOST}:"
+                        f"{Config.VLESS_PORT}?type={client_type}&security="
+                        f"{client_security}&pkb={client_publicKey}"
+                        f"&fp={client_fingerprint}&sni={client_serverName}"
+                        f"&sid={client_shortIds}&spx={client_spx}"
+                        f"&flow={client_flow}#{client_remark}-{client_email}"
+                    ).replace(" ", "%20")
 
-                    if xray_status == "running":
-                        return True
-                    else:
-                        return False
-                             
-            else:      
-                log.error(
-                    f"[{res.status_code}] An error "
-                    "occurred when accessing the "
-                    "server"
-                )
-                
-                return False
+                # Generating a vless link
+                # without client_remark.
+                else:
+                    client_vless_link = (
+                        f"vless://{client_id}@{Config.VLESS_HOST}:"
+                        f"{Config.VLESS_PORT}?type={client_type}&security="
+                        f"{client_security}&pkb={client_publicKey}"
+                        f"&fp={client_fingerprint}&sni={client_serverName}"
+                        f"&sid={client_shortIds}&spx={client_spx}"
+                        f"&flow={client_flow}#{client_email}"
+                    ).replace(" ", "%20")
 
+                data = [
+                        ["Comment", client_comment],
+                        ["Email", client_email],
+                        ["Enable", client_enable],
+                        ["Expiry Time", client_expiryTime],
+                        ["Flow", client_flow],
+                        ["Limit Ip", client_limitIp],
+                        ["Client ID", client_id],
+                        ["Reset", client_reset],
+                        ["Sub ID", client_subId],
+                        ["TG ID", client_tgId],
+                        ["Total GB", client_totalGB],
+                        ["Public Key", client_publicKey],
+                        ["Private Key", client_privateKey],
+                        ["Type", client_type],
+                        ["Security", client_security],
+                        ["Fingerprint", client_fingerprint],
+                        ["Server Name", client_serverName],
+                        ["Short Ids", client_shortIds],
+                        ["Spider X", client_spx],
+                        ["Remark", client_remark],
+                        ["Vless Link", client_vless_link]
+                    ]
 
-        except RequestException as err:
-            # Вывод места и самой
-            # ошибки в лог.
+                returned_data = {
+                    "client_comment": client_comment,
+                    "client_email": client_email,
+                    "client_enable": client_enable,
+                    "client_expiryTime": client_expiryTime,
+                    "client_flow": client_flow,
+                    "client_limitIp": client_limitIp,
+                    "client_id": client_id,
+                    "client_reset": client_reset,
+                    "client_subId": client_subId,
+                    "client_tgId": client_tgId,
+                    "client_totalGB": client_totalGB,
+                    "client_publicKey": client_publicKey,
+                    "client_privateKey": client_privateKey,
+                    "client_type": client_type,
+                    "client_security": client_security,
+                    "client_fingerprint": client_fingerprint,
+                    "client_serverName": client_serverName,
+                    "client_shortIds": client_shortIds,
+                    "client_spx": client_spx,
+                    "client_remark": client_remark,
+                    "vless_link": client_vless_link
+                }
+
+                # Checking that the transmitted
+                # data has been generated in a
+                # table.
+                if self.table_collection(data):
+                    pass
+
+                else:
+                    log.error(
+                        "An error occurred when "
+                        "generating the client's "
+                        "table"
+                    )
+
+                all_clients_data.append(returned_data)
+
+            if all_clients_data:
+                return True, all_clients_data
+
+        # Output of the location
+        # and the error itself to
+        # the log.
+        except Exception as err:
             log.error(
                 "An error has occurred in the "
-                "X_UI/xray_parse_active prog"
-                f"ram block: {err}"
+                "X_UI/get_clients "
+                f"program block: {err}"
+            )
+
+    # Getting one client.
+    def get_client(self, client_id: str = None):
+        log.info(
+            "Getting one client"
+        )
+
+        try:
+            # Getting a list of clients.
+            all_clients = self.get_clients()
+            clients = all_clients[1]
+
+            client_data = []
+            # Iterating through all received clients.
+            for client in clients:
+                if client_id is not None:
+                    # Comparison of the entered id
+                    # with the ID of the selected clients.
+                    if client['client_id'] == str(client_id):
+                        # Adding a client to the
+                        # list with the appropriate id.
+                        client_data.append(client)
+                    else:
+                        pass
+                else:
+                    log.error(
+                        "The client_id field must"
+                        "contain the client's id"
+                    )
+
+            if client_data:
+                return True, client_data
+
+            else:
+                # Warning output that the id did not
+                # match more than one id from all users.
+                log.warning(
+                    "The user with the id"
+                    f"{client_id} was not found"
+                )
+
+        # Output of the location
+        # and the error itself to
+        # the log.
+        except Exception as err:
+            log.error(
+                "An error has occurred in the "
+                "X_UI/get_client "
+                f"program block: {err}"
+            )
+
+    # Creating a new connection.
+    def create_connection(self):
+        log.info(
+            "Creating a new connection"
+        )
+
+        # Generating private and
+        # public keys in base64 format.
+        private_key = PrivateKey.generate()
+
+        private_b64 = private_key.encode().hex()
+        public_b64 = private_key.public_key.encode().hex()
+
+        private_key_b64 = base64.urlsafe_b64encode(
+            bytes.fromhex(private_b64)
+        ).decode().rstrip("=")
+
+        public_key_b64 = base64.urlsafe_b64encode(
+            bytes.fromhex(public_b64)
+        ).decode().rstrip("=")
+
+        # Generating the client's uuid.
+        client_id = str(uuid.uuid4())
+
+        # # Generating the client's subId.
+        subId = base64.urlsafe_b64encode(
+            uuid.uuid4().bytes
+        ).decode().rstrip("=")
+
+        # Creating 8 shortIds.
+        short_ids = [
+            secrets.token_hex(secrets.choice(range(2, 9))) for _ in range(8)
+        ]
+
+        # Iterating through all connections
+        # to find the port for the next one.
+        connections = self.get_connections()
+
+        # The list for storing
+        # ports after parsing.
+        ports = []
+
+        # Iterating through connections
+        # and searching for ports.
+        for connection in connections[1]:
+            ports.append(int(connection['conn_port']))
+
+        free_port = max(ports) + 1
+
+        # Checking for a range of ports.
+        if 443 <= free_port <= 543:
+            log.info(
+                f"The {free_port} port is within "
+                "the allowed port range"
+            )
+        else:
+            log.error(
+                f"The {free_port} port is not "
+                "in the range of valid ports."
             )
 
             return False
 
-    # Проверка результата xray
-    def xray_result(self):
-        log.info(
-            "Getting result xray services"
-        )
-
         try:
-            # Запрос на получение
-            # результата xray после
-            # перезагрузки или выключения.
-            res = self.session.get(
-                url=f"{self.x_ui_link}/panel/xray/getXrayResult",
-                # Пропуск проверки
-                # самоподписного сертификата.
+            payload = {
+                "up": 0,
+                "down": 0,
+                "total": 0,
+                "remark": "",
+                "enable": True,
+                "expiryTime": 0,
+                "listen": "",
+                "port": int(free_port),
+                "protocol": "vless",
+                "settings": json.dumps({
+                  "clients": [
+                    {
+                      "id": f"{str(client_id)}",
+                      "flow": "",
+                      "email": f"{str(short_ids[0])}",
+                      "limitIp": 0,
+                      "totalGB": 0,
+                      "expiryTime": 0,
+                      "enable": True,
+                      "tgId": "",
+                      "subId": f"{str(subId)}",
+                      "comment": "",
+                      "reset": 0
+                    }
+                  ],
+                  "decryption": "none",
+                  "fallbacks": []
+                }),
+                "streamSettings": json.dumps({
+                  "network": "tcp",
+                  "security": "reality",
+                  "externalProxy": [],
+                  "realitySettings": {
+                    "show": False,
+                    "xver": 0,
+                    "dest": "google.com:443",
+                    "serverNames": [
+                      "www.google.com"
+                    ],
+                    "privateKey": f"{str(private_key_b64)}",
+                    "minClient": "",
+                    "maxClient": "",
+                    "maxTimediff": 0,
+                    "shortIds": list(short_ids),
+                    "settings": {
+                      "publicKey": f"{str(public_key_b64)}",
+                      "fingerprint": "chrome",
+                      "serverName": "",
+                      "spiderX": "/"
+                    }
+                  },
+                  "tcpSettings": {
+                    "acceptProxyProtocol": False,
+                    "header": {
+                      "type": "none"
+                    }
+                  }
+                }),
+                "sniffing": json.dumps({
+                  "enabled": False,
+                  "destOverride": [
+                    "http",
+                    "tls",
+                    "quic",
+                    "fakedns"
+                  ],
+                  "metadataOnly": False,
+                  "routeOnly": False
+                }),
+                "allocate": json.dumps({
+                  "strategy": "always",
+                  "refresh": 5,
+                  "concurrency": 3
+                })
+            }
+
+            # Request to add a new connection.
+            res = self.session.post(
+                url=f"{self.x_ui_link}/panel/inbound/add",
+                # Skipping the verification
+                # of a self-signed certificate.
                 verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
-                stream=True
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
+                stream=True,
+                # Adding parameters and settings.
+                json=payload
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
 
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
+                # Converting the binary
+                # response from the server
+                # to JSON format.
                 j_cont = json.loads(res.content)
 
-                # Проверка что в success
-                # от сервера True.
+                # Generating a message
+                # for output to the user
+                # and writing to the log.
+                suc = f"SUCCESS: {j_cont['success']}"
+                msg = f"MESSAGE: {j_cont['msg']}"
+
+                # A separator for visual
+                # differentiation.
+                sep = '-' * (len(str(suc)) + len(str(msg)))
+
+                # Checking that success
+                # from the server is True.
                 if j_cont['success']:
-                    return True
+                    obj_data = j_cont['obj']
+
+                    log.info(
+                        'Connection added\n'
+                        f'{sep}\n{suc}\n{msg}\n{sep}'
+                    )
+
+                    return True, [obj_data['id'], obj_data['port']]
+
                 else:
+                    # An informational message
+                    # if success was False.
+                    log.error(
+                        'Add connection failed\n'
+                        f'{sep}\n{suc}\n{msg}\n{sep}'
+                    )
+
                     return False
-                
+
+            else:
+                # Informing the user that an error
+                # occurred when adding the connection.
+                log.error(
+                    f"[{res.status_code}]"
+                    " - Couldn't add connection"
+                )
+
+                return False
+
+        # Output of the location
+        # and the error itself to
+        # the log.
+        except RequestException as err:
+            log.error(
+                "An error has occurred in the "
+                "X_UI/get_connections "
+                f"program block: {err}"
+            )
+
+    # Creating a new client on
+    # an existing connection.
+    def add_client(self,
+                   connection_id: int = 4,
+                   flow: str = "xtls-rprx-vision",
+                   email: str = None,
+                   limit_ip: int = 0,
+                   totalGB: float = 0,
+                   expirtyTime: int = 0,
+                   enable: bool = True,
+                   tgId: int = 0,
+                   comment: str = "new_user"):
+
+        log.info(
+            "Adding a new user"
+        )
+
+        # Checking that expiration time
+        # contains any value greater than 0,
+        # then converts days to seconds,
+        # otherwise it makes the client
+        # indefinite.
+        if expirtyTime != 0:
+            rental_period = -int(expirtyTime) * 24 * 60 * 60 * 1000
+        else:
+            rental_period = 0
+
+        # Registering a uuid
+        # for a new client.
+        user_UUID = str(uuid.uuid1())
+
+        try:
+            payload = {
+                # The connection id to create
+                # a user in, default 0.
+                "id": connection_id,
+                "settings": json.dumps({
+                    "clients": [{
+                        # The client ID is always different
+                        # and is generated using a uuid.
+                        "id": user_UUID,
+                        # flow - the flow through which the
+                        # client's traffic will pass, default
+                        # xtls-rprx-vision.
+                        "flow": flow,
+                        # email can be used as the client's name,
+                        # with the default value being the client's
+                        # uuid.
+                        "email": email if email else user_UUID,
+                        # limit limits the number of connections
+                        # per client, default is 0.
+                        "limitIp": limit_ip,
+                        # totalGB limits the number of GB and after
+                        # exhaustion, the traffic will stop going,
+                        # default 0.
+                        "totalGB": totalGB,
+                        # expiration Time - the time in days, how
+                        # long the client will be up to date, default 0.
+                        "expiryTime": rental_period,
+                        # enable - the client is enabled or disabled,
+                        # default is True.
+                        "enable": enable,
+                        # tgId is the client's telegram ID,
+                        # default 0.
+                        "tgId": str(tgId) if tgId else "",
+                        # subId is an additional client id,
+                        # default 0.
+                        "subId": "",
+                        # comment - a comment for the client,
+                        # the default value is the client's uuid.
+                        "comment": comment if comment else user_UUID,
+                        # reset - client reset,
+                        # default 0.
+                        "reset": 0
+                    }]
+                })
+            }
+
+            # Request to add a user.
+            res = self.session.post(
+                url=f"{self.x_ui_link}/panel/inbound/addClient",
+                # Skipping the verification
+                # of a self-signed certificate.
+                verify=False,
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
+                stream=True,
+                # Adding parameters and settings.
+                json=payload
+            )
+
+            # Checking the successful
+            # response from the server.
+            if res.status_code == 200:
+
+                # Converting the binary response
+                # from the server to JSON format.
+                j_cont = json.loads(res.content)
+
+                # Generating a message
+                # for output to the user
+                # and writing to the log.
+                suc = f"SUCCESS: {j_cont['success']}"
+                msg = f"MESSAGE: {j_cont['msg']}"
+
+                # A separator for visual
+                # differentiation.
+                sep = '-' * (
+                    len(str(suc)) + len(str(msg))
+                )
+
+                # Checking that success
+                # from the server is True.
+                if j_cont['success']:
+                    log.info(
+                        "New user has been added\n"
+                        f"{sep}\n{suc}\n{msg}\n{sep}"
+                    )
+
+                    return True
+
+                else:
+                    # An informational message
+                    # if success was False.
+                    log.error(
+                        "New user has been not added\n"
+                        f"{sep}\n{suc}\n{msg}\n{sep}"
+                    )
+
+                    return False
+
             else:
                 log.error(
                     f"[{res.status_code}] An error "
                     "occurred when accessing the "
                     "server"
                 )
-                
+
                 return False
 
+        # Output of the location
+        # and the error itself to
+        # the log.
         except RequestException as err:
             log.error(
                 "An error has occurred in the "
-                "X_UI/xray_result"
+                "X_UI/add_client"
                 f"program block: {err}"
             )
 
-    # Остановка сервиса xray.
-    # Если на сервере установлена
-    # настройка xray с автоматическим
-    # перезапуском, верется True
-    # и выведется ошибка, поскольку xray
-    # автоматически перезапустится.
+    # Stopping the xray service.
+    # If the xray auto-restart setting
+    # is set on the server, True will
+    # return and an error will be displayed
+    # because xray will restart automatically.
     def xray_stop(self):
         log.info(
             "Stoping xray services"
         )
 
         try:
-            # Запрос на полную остановку xray.
+            # Request to stop xray completely.
             res = self.session.post(
                 url=f"{self.x_ui_link}/server/stopXrayService",
-                # Пропуск проверки
-                # самоподписного сертификата.
+                # Skipping the verification
+                # of a self-signed certificate.
                 verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
-                stream=True
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
+                stream=True,
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
 
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
+                # Converting the binary response
+                # from the server to JSON format.
                 j_cont = json.loads(res.content)
 
-                # Формирование сообщения
-                # для вывода пользователю
-                # и записи в лог.
+                # Generating a message
+                # for output to the user
+                # and writing to the log.
                 suc = f"SUCCESS: {j_cont['success']}"
                 msg = f"MESSAGE: {j_cont['msg']}"
 
-                # Сепаратор для визуального разграничения.
+                # A separator for visual
+                # differentiation.
                 sep = '-' * (
                     len(str(suc)) + len(str(msg))
                 )
 
-                # Проверка что в success
-                # от сервера True.
+                # Checking that success
+                # from the server is True.
                 if j_cont['success']:
                     
-                    # Проверка что в success
-                    # от сервера xray True.
+                    # Checking that success from
+                    # the xray server is True.
                     if self.xray_result():
                         for _ in range(10):
                             time.sleep(2)
-                            # Проверка активности xray
-                            # после его остановки для
-                            # определения автоматического
-                            # перезапуска.
+                            # Checking the activity of xray
+                            # after it is stopped to determine
+                            # the automatic restart.
                             xray_active = self.xray_parse_active()
                             if xray_active:
                                 break
                             
-
-                        # Проверка что вернулось True. 
+                        # Checking that it returned True.
                         if xray_active:
 
-                            # Информационный
-                            # вывод об ошибке.
+                            # Information output
+                            # about the error.
                             log.error(
                                     "Xray not stoped\n"
                                     "A request was sent "
@@ -1108,7 +1500,7 @@ class X_UI(API_CLIENT):
 
                             return False
 
-                        # Ожидается возврат False.
+                        # It is expected to return False.
                         else:
                             log.info(
                                 "Xray stoped\n"
@@ -1141,7 +1533,10 @@ class X_UI(API_CLIENT):
                 )
                 
                 return False
-                
+
+        # Output of the location
+        # and the error itself to
+        # the log.
         except RequestException as err:
             log.error(
                 "An error has occurred in the "
@@ -1149,51 +1544,51 @@ class X_UI(API_CLIENT):
                 f"program block: {err}"
             )
 
-    # Перезапуск сервиса xray.
+    # Restarting the xray service.
     def xray_restart(self):
         log.info(
             "Restart xray services"
         )
 
         try:
-            # Запрос на перезагрузку xray.
+            # Request to restart xray.
             res = self.session.post(
                 url=f"{self.x_ui_link}/server/restartXrayService",
-                # Пропуск проверки
-                # самоподписного сертификата.
+                # Skipping the verification
+                # of a self-signed certificate.
                 verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
-                stream=True
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
+                stream=True,
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
 
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
+                # Converting the binary response
+                # from the server to JSON format.
                 j_cont = json.loads(res.content)
 
-                # Формирование сообщения
-                # для вывода пользователю
-                # и записи в лог.
+                # Generating a message
+                # for output to the user
+                # and writing to the log.
                 suc = f"SUCCESS: {j_cont['success']}"
                 msg = f"MESSAGE: {j_cont['msg']}"
 
-                # Сепаратор для визуального разграничения.
+                # A separator for visual
+                # differentiation.
                 sep = '-' * (
                     len(str(suc)) + len(str(msg))
                 )
 
-                # Проверка что в success
-                # от сервера True.
+                # Checking that success
+                # from the server is True.
                 if j_cont['success']:
 
-                    # Проверка что в success
-                    # от сервера xray True.
+                    # Checking that success from
+                    # the xray server is True.
                     if self.xray_result():
                         log.info(
                             "The xray service has been restarted\n"
@@ -1201,7 +1596,7 @@ class X_UI(API_CLIENT):
                         )
 
                         return True
-                    
+
                     else:
                         log.error(
                             "xray_result returned False. "
@@ -1217,411 +1612,139 @@ class X_UI(API_CLIENT):
                     )
 
                     return False
-                
+
             else:
                 log.error(
                     f"[{res.status_code}] An error "
                     "occurred when accessing the "
                     "server"
                 )
-                
+
                 return False
-                
+        # Output of the location
+        # and the error itself to
+        # the log.
         except RequestException as err:
             log.error(
                 "An error has occurred in the "
-                "X_UI/xray_restart"
+                "X_UI/xray_restart "
                 f"program block: {err}"
             )
 
-    def xray_start(self):
-        pass
-    
-    # Создание нового клиента
-    # на существующем подключении.
-    def add_client(self,
-                   connection_id: int = 4,
-                   flow: str = "xtls-rprx-vision",
-                   email: str = None,
-                   limit_ip: int = 0,
-                   totalGB: float = 0,
-                   expirtyTime: int = 0,
-                   enable: bool = True,
-                   tgId: int = 0,
-                   comment: str = "new_user"):
+    # Checking the xray result.
+    def xray_result(self):
         log.info(
-            "Adding a new user"
+            "Getting result xray services"
         )
 
-        # Проверка что expirtyTime
-        # содержит какое-либо значение
-        # больше 0, далее переводит дни
-        # в секунды, иначе делает клиента
-        # бессрочным.
-        if expirtyTime != 0:
-            rental_period = -int(expirtyTime) * 24 * 60 * 60 * 1000
-        else:
-            rental_period = 0
-
-        # Регистрация uuid
-        # для нового клиента.
-        user_UUID = str(uuid.uuid1())
-
         try:
-            payload = {
-                # id подключения, в котором
-                # необходимо создать пользователя,
-                # default 0.
-                "id": connection_id,
-                "settings": json.dumps({
-                    "clients": [{
-                        # id клиента всегда разный и
-                        # генерируется с помощью uuid.
-                        "id": user_UUID,
-                        # flow - поток через который
-                        # будет проходить трафик клиента,
-                        # default xtls-rprx-vision.
-                        "flow": flow,
-                        # email может использоваться как
-                        # название клиента, по дефолту стоит
-                        # uuid клиента.
-                        "email": email if email else user_UUID,
-                        # limitIp ограничивает количество
-                        # подключений по одному клиенту,
-                        # default 0.
-                        "limitIp": limit_ip,
-                        # totalGB ограничивает количество
-                        # GB и после исчерпывания, трафик
-                        # перестанет идти, default 0.
-                        "totalGB": totalGB,
-                        # expiryTime - время в днях,
-                        # сколько будет актуален клиент,
-                        # default 0.
-                        "expiryTime": rental_period,
-                        # enable - включен или выключен клиент,
-                        # default True.
-                        "enable": enable,
-                        # tgId - id клиента в telegram,
-                        # default 0.
-                        "tgId": str(tgId) if tgId else "",
-                        # subId - дополнительный id клиента,
-                        # default 0.
-                        "subId": "",
-                        # comment - комментарий для клиента,
-                        # по дефолту стоит uuid клиента.
-                        "comment": comment if comment else user_UUID,
-                        # reset - сброс клиента,
-                        # default 0.
-                        "reset": 0
-                    }]
-                })
-            }
-
-            # Запрос на добавление пользователя.
-            res = self.session.post(
-                url=f"{self.x_ui_link}/panel/inbound/addClient",
-                # Полезная нагрузка в виде json.
-                json=payload,
-                # Пропуск проверки
-                # самоподписного сертификата.
+            # Request to get the xray
+            # result after reboot or
+            # shutdown.
+            res = self.session.get(
+                url=f"{self.x_ui_link}/panel/xray/getXrayResult",
+                # Skipping the verification
+                # of a self-signed certificate.
                 verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
-                stream=True
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
+                stream=True,
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
 
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
+                # Converting the binary response
+                # from the server to JSON format.
                 j_cont = json.loads(res.content)
 
-                # Формирование сообщения
-                # для вывода пользователю
-                # и записи в лог.
-                suc = f"SUCCESS: {j_cont['success']}"
-                msg = f"MESSAGE: {j_cont['msg']}"
-
-                # Сепаратор для визуального разграничения.
-                sep = '-' * (
-                    len(str(suc)) + len(str(msg))
-                )
-
-                # Проверка что в success
-                # от сервера True.
+                # Checking that success
+                # from the server is True.
                 if j_cont['success']:
-                    log.info(
-                        "New user has been added\n"
-                        f"{sep}\n{suc}\n{msg}\n{sep}"
-                    )
-
                     return True
-                
                 else:
-                    log.error(
-                        "New user has been not added\n"
-                        f"{sep}\n{suc}\n{msg}\n{sep}"
-                    )
-
                     return False
-                
+
             else:
                 log.error(
                     f"[{res.status_code}] An error "
                     "occurred when accessing the "
                     "server"
                 )
-                
+
                 return False
 
+        # Output of the location
+        # and the error itself to
+        # the log.
         except RequestException as err:
             log.error(
                 "An error has occurred in the "
-                "X_UI/add_client"
+                "X_UI/xray_result"
                 f"program block: {err}"
             )
 
-    # Получение vless
-    # конфигурации в виде
-    # ссылки.
-    def get_vless_link(self, user_id: str, config_json: bool = False):
+    # Checking xray activity.
+    def xray_parse_active(self):
         log.info(
-            "Getting the vless "
-            "configuration as a link"
+            "Getting xray status"
         )
 
         try:
-            # Запрос на получение
-            # конфигурации vless.
+            # A request to receive all
+            # data on the x-ui system.
             res = self.session.post(
-                url=f"{self.x_ui_link}/panel/inbound/list",
-                # Пропуск проверки
-                # самоподписного сертификата.
+                url=f"{self.x_ui_link}/server/status",
+                # Skipping the verification
+                # of a self-signed certificate.
                 verify=False,
-                # Позволяет загружать ответ
-                # по частям, уменьшая нагрузку
-                # на память.
-                stream=True
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
+                stream=True,
             )
 
-            # Проверка успешного
-            # ответа от сервера.
+            # Checking the successful
+            # response from the server.
             if res.status_code == 200:
 
-                # Преобразование бинарного
-                # ответа от сервера в JSON
-                # формат.
+                # Converting the binary response
+                # from the server to JSON format.
                 j_cont = json.loads(res.content)
 
-                # Формирование сообщения
-                # для вывода пользователю
-                # и записи в лог.
-                suc = f"SUCCESS: {j_cont['success']}"
-                msg = f"MESSAGE: {j_cont['msg']}"
-
-                # Сепаратор для визуального разграничения.
-                sep = '-' * (
-                    len(str(suc)) + len(str(msg))
-                )
-
-                # Проверка что в success
-                # от сервера True.
+                # Checking that success
+                # from the server is True.
                 if j_cont['success']:
 
                     obj_data = j_cont['obj']
 
-                    # Перебор всех значений из obj.
-                    for iter_obj in obj_data:
-                        # Сбор всех данных
-                        # по пользователям.
-                        try:
-                            # Из obj берется settings.
-                            # sett_data = iter_obj['settings']
-                            sett_data = json.loads(iter_obj['settings'])
+                    # Xray status
+                    xray_status = obj_data['xray']['state']
 
-                            # Сбор клиентов на подключении.
-                            clients = sett_data['clients']
-                            # Перебор всех клиентов
-                            # которые присутствуют
-                            # в settings.
-                            for client in clients:
+                    if xray_status == "running":
+                        return True, xray_status
+                    else:
+                        return False
 
-                                if client['id'] == user_id:
+            else:
+                log.error(
+                    f"[{res.status_code}] An error "
+                    "occurred when accessing the "
+                    "server"
+                )
 
-                                    # Уникальный UUID клиента.
-                                    user_id = client['id']
+                return False
 
-                                    # Какой режим используется.
-                                    user_flow = client['flow']
-                                
-                                    # Email пользователя.
-                                    user_email = client['email']
-                                    user_email = urllib.parse.quote(user_email, safe='')
-
-                                    # Из obj берется streamSettings.
-                                    sSett_data = json.loads(
-                                        iter_obj['streamSettings']
-                                    )
-
-                                    # Из streamSettings
-                                    # берется realitySettings.
-                                    realSet = sSett_data['realitySettings']
-
-                                    # Под какой сервис
-                                    # происходит маскировка.
-                                    serverName = realSet['serverNames'][0]
-
-                                    # Короткие идентификаторы.
-                                    shortIds = realSet['shortIds'][0]
-
-                                    # Публичный ключ
-                                    # подключения.
-                                    settings_publicKey = realSet['settings']['publicKey']
-
-                                    # Отпечаток подключения.
-                                    settings_fingerprint = realSet['settings']['fingerprint']
-
-                                    settings_spx = realSet['settings']['spiderX']
-
-                                    # Название подключения
-                                    # (примечание).
-                                    connection_remark = j_cont['obj'][0]['remark']
-
-                                    # Замена пустого значения
-                                    # и специальных символов.
-                                    connection_remark = urllib.parse.quote(connection_remark, safe='')
-
-                                    # Формирование vless ссылки
-                                    # без названия подключения.
-
-                                    type_ = "tcp"
-                                    security = "reality"
-                                    form_settings_spx = urllib.parse.quote(settings_spx, safe='')
-
-                                    if connection_remark != "":
-                                        vless_link = (
-                                            f"vless://{user_id}@{os.getenv('VLESS_HOST')}:"
-                                            f"{os.getenv('VLESS_PORT')}?type={type_}&security="
-                                            f"{security}&pkb={settings_publicKey}"
-                                            f"&fp={settings_fingerprint}&sni={serverName}"
-                                            f"&sid={shortIds[0]}&spx={form_settings_spx}&flow={user_flow}"
-                                            f"#{connection_remark}-{user_email}"
-                                        )
-                                    
-                                    # Формирование vless ссылки
-                                    # с названием подключения.
-                                    else:
-                                        vless_link = (
-                                            f"vless://{user_id}@{os.getenv('VLESS_HOST')}:"
-                                            f"{os.getenv('VLESS_PORT')}?type={type_}&security="
-                                            f"{security}&pbk={settings_publicKey}"
-                                            f"&fp={settings_fingerprint}&sni={serverName}"
-                                            f"&sid={shortIds}&spx={form_settings_spx}&flow={user_flow}"
-                                            f"#{user_email}"
-                                        )
-
-                                    vless_link = vless_link.replace(" ", "%20")
-
-                                    log.info(
-                                        f"USER ID {user_id} | VLESS LINK\n\n"
-                                        f"{vless_link}"
-                                    )
-
-                                    # Проверка что
-                                    # config_json True.
-                                    if config_json:
-
-                                        # Формирование JSON
-                                        # объекта.
-                                        config = {
-                                            "inbounds": [
-                                                {
-                                                    "port": 10808,
-                                                    "listen": "127.0.0.1",
-                                                    "protocol": "socks",
-                                                    "settings": {"udp": True}
-                                                }
-                                            ],
-                                            "outbounds": [
-                                                {
-                                                    "protocol": "vless",
-                                                    "settings": {
-                                                        "vnext": [
-                                                            {
-                                                                "address": str(os.getenv('VLESS_HOST')),
-                                                                "port": int(os.getenv('VLESS_PORT')),
-                                                                "users": [
-                                                                    {
-                                                                        "id": str(user_id),
-                                                                        "encryption": "none",
-                                                                        "flow": str(user_flow)
-                                                                    }
-                                                                ]
-                                                            }
-                                                        ]
-                                                    },
-                                                    "streamSettings": {
-                                                        "network": str(type_),
-                                                        "security": str(security),
-                                                        "realitySettings": {
-                                                            "publicKey": str(settings_publicKey),
-                                                            "shortId": str(shortIds),
-                                                            "fingerprint": str(settings_fingerprint),
-                                                            "serverName": str(serverName),
-                                                            "spiderX": settings_spx
-                                                        } if security == "reality" else None
-                                                    }
-                                                }
-                                            ]
-                                        }
-
-                                        config["outbounds"][0]["streamSettings"] = {k: v for k, v in config["outbounds"][0]["streamSettings"].items() if v}
-                                        
-                                        folder_json_config = Path(os.getenv('USER_JSON_CONFIGS_PATH'))
-
-                                        # Проверка наличия папки
-                                        # для хранения конфигураций
-                                        # пользователей.
-                                        if not folder_json_config.is_dir():
-                                            folder_json_config.mkdir(parents=True, exist_ok=True)
-                                            log.info(
-                                                f"Folder {folder_json_config} has been created"
-                                            )
-
-                                        file_path = folder_json_config / f"{user_id}_config.json"
-
-                                        # Запись в файл.
-                                        with open(file_path, 'w') as file:
-                                            json.dump(config, file, indent=4)
-
-                                    return True
-       
-                        except Exception as err:
-                            log.error(
-                                "An error occurred in the "
-                                "X_UI/get_all_list block "
-                                "iterating over values from "
-                                "clients. "
-                                f"Error: {err}"
-                            )
-                else:
-                    log.error(
-                        "An error occurred while "
-                        "receiving the list\n"
-                        f"{sep}\n{suc}\n{msg}\n{sep}"
-                    )
-
-                    return False
-                        
-        except Exception as err:
+        # Output of the location
+        # and the error itself to
+        # the log.
+        except RequestException as err:
             log.error(
-                "An error occurred in the "
-                "X_UI/get_vless_link block "
-                "iterating over values from "
-                "realSet_data. "
-                f"Error: {err}"
+                "An error has occurred in the "
+                "X_UI/xray_parse_active prog"
+                f"ram block: {err}"
             )
+
+            return False
