@@ -2,11 +2,7 @@ import os
 import logging
 from pathlib import Path
 from datetime import datetime
-from dotenv import load_dotenv
-
-# Загрузка переменных окружения
-# из файла .env в os.environ.
-load_dotenv()
+from config import Config
 
 class LoggingColorFormatter(logging.Formatter):
     COLORS = {
@@ -24,28 +20,22 @@ class LoggingColorFormatter(logging.Formatter):
         log_msg = super().format(record)
         return log_msg.replace(record.levelname, record.levelname_color)
 
-logger = logging.getLogger("keyword_color_logger")
+logger = logging.getLogger("file_only_logger")
 
-folder_logs = Path(os.getenv('LOGS_PATH'))
+folder_logs = Path(Config.X_UI_LOGS_PATH)
 
 if not folder_logs.is_dir():
     folder_logs.mkdir(parents=True, exist_ok=True)
 
 # Форматирование имени файла с сегодняшней датой
-log_filename = f'{folder_logs}/{datetime.now().strftime("%Y-%m-%d")}.log'
-
-# Stream handler для консоли (цветной вывод)
-console_handler = logging.StreamHandler()
-console_formatter = LoggingColorFormatter("%(asctime)s - %(levelname)s - %(message)s")
-console_handler.setFormatter(console_formatter)
+log_filename = folder_logs / f'{datetime.now().strftime("%Y-%m-%d")}.log'
 
 # File handler для записи в файл (без ANSI)
 log_file_handler = logging.FileHandler(log_filename, encoding="utf-8")
 file_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 log_file_handler.setFormatter(file_formatter)
 
-# Добавляем оба обработчика
-logger.addHandler(console_handler)
+# Добавляем только file handler
 logger.addHandler(log_file_handler)
 
 # Устанавливаем уровень логирования
