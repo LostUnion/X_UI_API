@@ -28,3 +28,6 @@ class Config(object):
 
     # BACKUPS data
     X_UI_BACKUPS_PATH = str(os.getenv('X_UI_BACKUPS_PATH'))
+
+    PORT_RANGE_MIN = int(os.getenv('PORT_RANGE_MIN'))
+    PORT_RANGE_MAX = int(os.getenv('PORT_RANGE_MAX'))
