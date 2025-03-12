@@ -55,27 +55,32 @@ class X_UI(API_CLIENT):
     # Raising the session and
     # recording cookies after
     # authorization.
+
     def session_up(self):
         log.info(
-            f"Connecting to \"{self.x_ui_link}\""
+            "Connecting to "
+            f"\"{self.x_ui_link}\""
         )
 
         try:
+            payload = {
+                "username": self.x_ui_login,
+                "password": self.x_ui_password
+            }
+
             # Authorization
             # in the x-ui panel.
             res = self.session.post(
                 url=f"{self.x_ui_link}/login",
-                json={
-                    "username": self.x_ui_login,
-                    "password": self.x_ui_password
-                },
                 # Skipping the verification
                 # of a self-signed certificate.
                 verify=False,
                 # Allows you to download the
                 # response in parts, reducing
                 # the memory load.
-                stream=True
+                stream=True,
+                # Adding parameters and settings.
+                json=payload
             )
 
             # Checking the successful
@@ -100,6 +105,7 @@ class X_UI(API_CLIENT):
                 # Checking that success
                 # from the server is True.
                 if j_cont['success']:
+
                     log.info(
                         'Authorization was successful\n'
                         f'{sep}\n{suc}\n{msg}\n{sep}'
@@ -146,15 +152,17 @@ class X_UI(API_CLIENT):
                 # Information message if
                 # res.status_code != 200.
                 log.error(
-                    f'Status code [{res.status_code}]'
-                    )
+                    f"[{res.status_code}] - An "
+                    "error occurred during "
+                    "authorization"
+                )
 
-                return False
+                quit()
 
+        # Output of the location
+        # and the error itself to
+        # the log.
         except RequestException as err:
-            # Output of the location
-            # and the error itself to
-            # the log.
             log.error(
                 "An error has occurred in "
                 "the X_UI/session_up progr"
@@ -205,6 +213,7 @@ class X_UI(API_CLIENT):
                     # Checking the existence
                     # of the backup folder.
                     if not folder_backups.is_dir():
+
                         # Creating a folder if
                         # it doesn't exist.
                         folder_backups.mkdir(parents=True, exist_ok=True)
@@ -243,7 +252,9 @@ class X_UI(API_CLIENT):
                         " - The request was successful, "
                         "but the server returned nothing."
                     )
+
                     return False
+
             else:
                 # Informing the user that an error
                 # has occurred while downloading the
@@ -255,10 +266,10 @@ class X_UI(API_CLIENT):
 
                 return False
 
+        # Output of the location
+        # and the error itself to
+        # the log.
         except RequestException as err:
-            # Output of the location
-            # and the error itself to
-            # the log.
             log.error(
                 "An error has occurred in the "
                 "X_UI/export_conf_backups prog"
@@ -269,7 +280,8 @@ class X_UI(API_CLIENT):
 
     # Creating a table
     # for log output.
-    def table_collection(self, data):
+    def table_collection(self,
+                         data):
         try:
             # Calculating the maximum
             # length of metrics.
@@ -311,15 +323,17 @@ class X_UI(API_CLIENT):
 
             return True
 
+        # Output of the location
+        # and the error itself to
+        # the log.
         except Exception as err:
-            # Output of the location
-            # and the error itself to
-            # the log.
             log.error(
                 "An error has occurred in the "
                 "X_UI/table_collection prog"
                 f"ram block: {err}"
             )
+
+            return False
 
     # Getting statistics for
     # the entire system.
@@ -477,8 +491,9 @@ class X_UI(API_CLIENT):
                         ["CPU - Cores", cpu_core],
                         ["CPU - Logical Procs", cpu_logic],
                         ["CPU - Speed (MHz)", cpu_speed_Mhz],
-                        ["CPU - Load (1, 5, 15 min)",
-                        ', '.join(map(str, cpu_leeds))],
+                        ["CPU - Load (1, 5, 15 min)", ', '.join(
+                            map(str, cpu_leeds)
+                        )],
 
                         ["RAM - Current", ram_curr],
                         ["RAM - Total", ram_total],
@@ -584,10 +599,10 @@ class X_UI(API_CLIENT):
 
                 return False
 
+        # Output of the location
+        # and the error itself to
+        # the log.
         except RequestException as err:
-            # Output of the location
-            # and the error itself to
-            # the log.
             log.error(
                 "An error has occurred in the "
                 "X_UI/get_system_status prog"
@@ -598,7 +613,8 @@ class X_UI(API_CLIENT):
 
     # Getting data about
     # all connections.
-    def get_connections(self, get_clients: bool = False):
+    def get_connections(self,
+                        get_clients: bool = False):
         log.info(
             "Getting a list of connections"
         )
@@ -646,104 +662,105 @@ class X_UI(API_CLIENT):
 
                     # Iterating through all the values from obj.
                     for iter_obj in obj_data:
+
                         # Collecting all
                         # connection data.
-                        try:
-                            # -- CONNECTION INFORMATION --
 
-                            # Connection ID.
-                            conn_id = iter_obj['id']
+                        # -- CONNECTION INFORMATION --
 
-                            # Connection name.
-                            conn_remark = iter_obj['remark']
+                        # Connection ID.
+                        conn_id = iter_obj['id']
 
-                            # Checking whether the
-                            # connection has been
-                            # restarted.
-                            conn_enable = iter_obj['enable']
+                        # Connection name.
+                        conn_remark = iter_obj['remark']
 
-                            # Connection port.
-                            conn_port = iter_obj['port']
+                        # Checking whether the
+                        # connection has been
+                        # restarted.
+                        conn_enable = iter_obj['enable']
 
-                            # Connection protocol.
-                            conn_protocol = iter_obj['protocol']
+                        # Connection port.
+                        conn_port = iter_obj['port']
 
-                            conn_up = iter_obj['up']
-                            conn_down = iter_obj['down']
+                        # Connection protocol.
+                        conn_protocol = iter_obj['protocol']
 
-                            # Settings is taken from obj.
-                            sett_data = json.loads(iter_obj['settings'])
+                        conn_up = iter_obj['up']
+                        conn_down = iter_obj['down']
 
-                            # streamSettings is taken from obj.
-                            streamSett = json.loads(iter_obj['streamSettings'])
+                        # Settings is taken from obj.
+                        sett_data = json.loads(iter_obj['settings'])
 
-                            conn_network = streamSett['network']
+                        # streamSettings is taken from obj.
+                        streamSett = json.loads(iter_obj['streamSettings'])
 
-                            conn_security = streamSett['security']
-                            conn_externProxy = streamSett['externalProxy']
+                        conn_network = streamSett['network']
 
-                            # realitySettings is taken from streamSettings.
-                            realitySettings = streamSett['realitySettings']
+                        conn_security = streamSett['security']
+                        conn_externProxy = streamSett['externalProxy']
 
-                            # -
-                            real_show = realitySettings['show']
+                        # realitySettings is taken from streamSettings.
+                        realitySettings = streamSett['realitySettings']
 
-                            # -
-                            real_xver = realitySettings['xver']
+                        # -
+                        real_show = realitySettings['show']
 
-                            # - Destination.
-                            real_dest = realitySettings['dest']
+                        # -
+                        real_xver = realitySettings['xver']
 
-                            # Which service is being disguised as.
-                            real_serverNames = realitySettings['serverNames']
+                        # - Destination.
+                        real_dest = realitySettings['dest']
 
-                            # The private connection key.
-                            real_privateKey = realitySettings['privateKey']
+                        # Which service is being disguised as.
+                        real_serverNames = realitySettings['serverNames']
 
-                            # The minimum allowed number
-                            # of clients per connection.
-                            real_minClient = realitySettings['minClient']
+                        # The private connection key.
+                        real_privateKey = realitySettings['privateKey']
 
-                            # The maximum allowed number
-                            # of clients per connection.
-                            real_maxClient = realitySettings['maxClient']
+                        # The minimum allowed number
+                        # of clients per connection.
+                        real_minClient = realitySettings['minClient']
 
-                            # The maximum time interval.
-                            real_maxTimediff = realitySettings['maxTimediff']
+                        # The maximum allowed number
+                        # of clients per connection.
+                        real_maxClient = realitySettings['maxClient']
 
-                            # Short identifiers.
-                            real_shortIds = realitySettings['shortIds']
+                        # The maximum time interval.
+                        real_maxTimediff = realitySettings['maxTimediff']
 
-                            real_settings = realitySettings['settings']
+                        # Short identifiers.
+                        real_shortIds = realitySettings['shortIds']
 
-                            real_sett_publicKey = real_settings['publicKey']
+                        real_settings = realitySettings['settings']
 
-                            real_sett_fingprnt = real_settings['fingerprint']
+                        real_sett_publicKey = real_settings['publicKey']
 
-                            real_sett_serverName = real_settings['serverName']
+                        real_sett_fingprnt = real_settings['fingerprint']
 
-                            real_sett_spiderX = real_settings['spiderX']
+                        real_sett_serverName = real_settings['serverName']
 
-                            clients = sett_data['clients']
+                        real_sett_spiderX = real_settings['spiderX']
 
-                            # Client counter on activation.
-                            clients_count = 0
-                            for client in sett_data['clients']:
-                                client['publicKey'] = real_sett_publicKey
-                                client['privateKey'] = real_privateKey
+                        clients = sett_data['clients']
 
-                                client['type'] = conn_network
-                                client['security'] = conn_security
-                                client['fingerprint'] = real_sett_fingprnt
-                                client['serverName'] = real_serverNames[0]
-                                client['shortIds'] = real_shortIds[0]
-                                client['SpiderX'] = real_sett_spiderX
-                                client['Remark'] = conn_remark
+                        # Client counter on activation.
+                        clients_count = 0
+                        for client in sett_data['clients']:
+                            client['publicKey'] = real_sett_publicKey
+                            client['privateKey'] = real_privateKey
 
-                                all_clients.append(client)
-                                clients_count += 1
+                            client['type'] = conn_network
+                            client['security'] = conn_security
+                            client['fingerprint'] = real_sett_fingprnt
+                            client['serverName'] = real_serverNames[0]
+                            client['shortIds'] = real_shortIds[0]
+                            client['SpiderX'] = real_sett_spiderX
+                            client['Remark'] = conn_remark
 
-                            data = [
+                            all_clients.append(client)
+                            clients_count += 1
+
+                        data = [
                                 ["Connection ID", conn_id],
                                 ["Name", conn_remark],
                                 ["Enable", conn_enable],
@@ -770,7 +787,7 @@ class X_UI(API_CLIENT):
                                 ["Spider X", real_sett_spiderX]
                             ]
 
-                            returned_data = {
+                        returned_data = {
                                 "conn_id": conn_id,
                                 "conn_remark": conn_remark,
                                 "conn_enable": conn_enable,
@@ -798,43 +815,35 @@ class X_UI(API_CLIENT):
                                 "clients": clients
                             }
 
+                        if get_clients:
+                            pass
+
+                        else:
                             # Checking that the transmitted
                             # data has been generated in a
                             # table.
-
-                            if get_clients:
+                            if self.table_collection(data):
                                 pass
 
+                            # If the data has not been
+                            # generated, an error occurs.
                             else:
-                                if self.table_collection(data):
-                                    pass
+                                log.error(
+                                    "An error occurred when "
+                                    "displaying the connection table"
+                                )
 
-                                # If the data has not been
-                                # generated, an error occurs.
-                                else:
-                                    log.error(
-                                        "An error occurred when "
-                                        "displaying the connection table"
-                                    )
-
-                                all_connections.append(returned_data)
-
-                        # Output of the location
-                        # and the error itself to
-                        # the log.
-                        except Exception as err:
-                            log.error(
-                                "An error occurred in the "
-                                "X_UI/get_connections block "
-                                "iterating over values from obj. "
-                                f"Error: {err}"
-                            )
-
-                        continue
+                            all_connections.append(returned_data)
 
                     if all_connections is not None:
                         return True, all_connections, all_clients
 
+                    else:
+                        log.error(
+                            "Connections were not found"
+                        )
+
+                        return False
                 else:
                     log.error(
                         "An error occurred while "
@@ -843,6 +852,7 @@ class X_UI(API_CLIENT):
                     )
 
                     return False
+
             else:
                 log.error(
                     f"[{res.status_code}] An error "
@@ -861,6 +871,8 @@ class X_UI(API_CLIENT):
                 "X_UI/get_connections "
                 f"program block: {err}"
             )
+
+            return False
 
     # Getting all clients.
     def get_clients(self):
@@ -1009,8 +1021,12 @@ class X_UI(API_CLIENT):
                 f"program block: {err}"
             )
 
+            return False
+
     # Getting one client.
-    def get_client(self, client_id: str = None):
+    def get_client(self,
+                   client_id: str = None):
+
         log.info(
             "Getting one client"
         )
@@ -1021,6 +1037,7 @@ class X_UI(API_CLIENT):
             clients = all_clients[1]
 
             client_data = []
+
             # Iterating through all received clients.
             for client in clients:
                 if client_id is not None:
@@ -1032,6 +1049,7 @@ class X_UI(API_CLIENT):
                         client_data.append(client)
                     else:
                         pass
+
                 else:
                     log.error(
                         "The client_id field must"
@@ -1059,146 +1077,292 @@ class X_UI(API_CLIENT):
                 f"program block: {err}"
             )
 
-    # Creating a new connection.
-    def create_connection(self):
+    # Public and private key generation.
+    def pr_pub_key(self):
         log.info(
-            "Creating a new connection"
+            "Public and private key generation"
         )
 
-        # Generating private and
-        # public keys in base64 format.
-        private_key = PrivateKey.generate()
+        try:
+            # Generating private key in base64 format.
+            private_key = PrivateKey.generate()
 
-        private_b64 = private_key.encode().hex()
-        public_b64 = private_key.public_key.encode().hex()
+            # Converting a private key to hex.
+            private_hex = private_key.encode().hex()
 
-        private_key_b64 = base64.urlsafe_b64encode(
-            bytes.fromhex(private_b64)
-        ).decode().rstrip("=")
+            # Converting a public key to hex.
+            public_hex = private_key.public_key.encode().hex()
 
-        public_key_b64 = base64.urlsafe_b64encode(
-            bytes.fromhex(public_b64)
-        ).decode().rstrip("=")
+            # Converting a private key to base64.
+            private_b64 = base64.urlsafe_b64encode(
+                bytes.fromhex(private_hex)
+            ).decode().rstrip("=")
 
-        # Generating the client's uuid.
-        client_id = str(uuid.uuid4())
+            # Converting a public key to base64.
+            public_b64 = base64.urlsafe_b64encode(
+                bytes.fromhex(public_hex)
+            ).decode().rstrip("=")
 
-        # # Generating the client's subId.
-        subId = base64.urlsafe_b64encode(
-            uuid.uuid4().bytes
-        ).decode().rstrip("=")
+            return private_b64, public_b64
 
-        # Creating 8 shortIds.
-        short_ids = [
-            secrets.token_hex(secrets.choice(range(2, 9))) for _ in range(8)
-        ]
-
-        # Iterating through all connections
-        # to find the port for the next one.
-        connections = self.get_connections()
-
-        # The list for storing
-        # ports after parsing.
-        ports = []
-
-        # Iterating through connections
-        # and searching for ports.
-        for connection in connections[1]:
-            ports.append(int(connection['conn_port']))
-
-        free_port = max(ports) + 1
-
-        # Checking for a range of ports.
-        if 443 <= free_port <= 543:
-            log.info(
-                f"The {free_port} port is within "
-                "the allowed port range"
-            )
-        else:
+        # Output of the location
+        # and the error itself to
+        # the log.
+        except Exception as err:
             log.error(
-                f"The {free_port} port is not "
-                "in the range of valid ports."
+                "An error has occurred in the "
+                "X_UI/pr_pub_key "
+                f"program block: {err}"
             )
 
             return False
 
+    # Creating a new connection.
+    def create_connection(self,
+                          up: int = 0,
+                          down: int = 0,
+                          total: int = 0,
+                          remark: str = "",
+                          enable: bool = True,
+                          expiryTime: int = 0,
+                          listen: str = "",
+                          protocol: str = "vless",
+                          network: str = "tcp",
+                          security: str = "reality",
+                          externalProxy: list = [],
+                          show: bool = False,
+                          xver: int = 0,
+                          dest: str = "google.com:443",
+                          serverNames: list = ["www.google.com"],
+                          fingerprint: str = "chrome",
+                          serverName: str = "",
+                          spiderX: str = "/",
+                          acceptProxyProtocol: bool = False,
+                          sniffing_enabled: bool = False,
+                          destOverride: list = [
+                              "http", "tls", "quic", "fakedns"
+                          ],
+                          metadataOnly: bool = False,
+                          routeOnly: bool = False,
+                          strategy: str = "always",
+                          refresh: int = 5,
+                          concurrency: int = 3):
+        log.info(
+            "Creating a new connection"
+        )
+
         try:
-            payload = {
-                "up": 0,
-                "down": 0,
-                "total": 0,
-                "remark": "",
-                "enable": True,
-                "expiryTime": 0,
-                "listen": "",
-                "port": int(free_port),
-                "protocol": "vless",
-                "settings": json.dumps({
-                  "clients": [
-                    {
-                      "id": f"{str(client_id)}",
-                      "flow": "",
-                      "email": f"{str(short_ids[0])}",
-                      "limitIp": 0,
-                      "totalGB": 0,
-                      "expiryTime": 0,
-                      "enable": True,
-                      "tgId": "",
-                      "subId": f"{str(subId)}",
-                      "comment": "",
-                      "reset": 0
-                    }
-                  ],
-                  "decryption": "none",
-                  "fallbacks": []
-                }),
-                "streamSettings": json.dumps({
-                  "network": "tcp",
-                  "security": "reality",
-                  "externalProxy": [],
-                  "realitySettings": {
-                    "show": False,
-                    "xver": 0,
-                    "dest": "google.com:443",
-                    "serverNames": [
-                      "www.google.com"
-                    ],
-                    "privateKey": f"{str(private_key_b64)}",
-                    "minClient": "",
-                    "maxClient": "",
-                    "maxTimediff": 0,
-                    "shortIds": list(short_ids),
-                    "settings": {
-                      "publicKey": f"{str(public_key_b64)}",
-                      "fingerprint": "chrome",
-                      "serverName": "",
-                      "spiderX": "/"
-                    }
-                  },
-                  "tcpSettings": {
-                    "acceptProxyProtocol": False,
-                    "header": {
-                      "type": "none"
-                    }
-                  }
-                }),
-                "sniffing": json.dumps({
-                  "enabled": False,
-                  "destOverride": [
-                    "http",
-                    "tls",
-                    "quic",
-                    "fakedns"
-                  ],
-                  "metadataOnly": False,
-                  "routeOnly": False
-                }),
-                "allocate": json.dumps({
-                  "strategy": "always",
-                  "refresh": 5,
-                  "concurrency": 3
-                })
+            # Obtaining a private and public key.
+            private_key, public_key = self.pr_pub_key()
+
+            # Generating the client's uuid.
+            client_id = str(uuid.uuid4())
+
+            # Generating the client's subId.
+            subId = base64.urlsafe_b64encode(
+                uuid.uuid4().bytes
+            ).decode().rstrip("=")
+
+            # Creating 8 shortIds.
+            short_ids = [
+                secrets.token_hex(
+                    secrets.choice(range(2, 9))
+                ) for _ in range(8)
+            ]
+
+            # Checking that the keys are there.
+            required_values = {
+                "private_key": private_key,
+                "public_key": public_key,
+                "client_id": client_id,
+                "sub_id": subId,
+                "short_ids": short_ids
             }
+
+            missing_values = [
+                key for key, value in required_values.items() if not value
+            ]
+
+            # Checking for all values.
+            if missing_values:
+                log.error(
+                    "Error: missing values "
+                    f"{', '.join(missing_values)}"
+                    )
+
+                return False
+
+            connections = self.get_connections()
+
+            # The list for storing
+            # ports after parsing.
+            ports = []
+
+            # Iterating through connections
+            # and searching for ports.
+            for connection in connections[1]:
+                ports.append(int(connection['conn_port']))
+
+            free_port = max(ports) + 1
+
+            # Checking for a range of ports.
+            if Config.PORT_RANGE_MIN <= free_port <= Config.PORT_RANGE_MAX:
+                log.info(
+                    f"The {free_port} port is within "
+                    "the allowed port range"
+                )
+
+            else:
+                log.error(
+                    f"The {free_port} port is not "
+                    "in the range of valid ports."
+                )
+
+                return False
+
+            # Creating a test client.
+            try:
+                settings = json.dumps({
+                    "clients": [
+                        {
+                            "id": f"{str(client_id)}",
+                            "flow": "",
+                            "email": f"{str(short_ids[0])}",
+                            "limitIp": 0,
+                            "totalGB": 0,
+                            "expiryTime": 0,
+                            "enable": True,
+                            "tgId": "",
+                            "subId": f"{str(subId)}",
+                            "comment": "",
+                            "reset": 0
+                        }
+                    ],
+                    "decryption": "none",
+                    "fallbacks": []
+                })
+
+            # Output of the location
+            # and the error itself to
+            # the log.
+            except Exception as err:
+                log.error(
+                    "An error has occurred in the "
+                    "X_UI/create_connection.clients "
+                    f"program block: {err}"
+                )
+
+                return False
+
+            try:
+                streamSettings = json.dumps({
+                    "network": f"{network}",
+                    "security": f"{security}",
+                    "externalProxy": list(externalProxy),
+                    "realitySettings": {
+                        "show": bool(show),
+                        "xver": int(xver),
+                        "dest": f"{str(dest)}",
+                        "serverNames": list(serverNames),
+                        "privateKey": f"{str(private_key)}",
+                        "minClient": "",
+                        "maxClient": "",
+                        "maxTimediff": 0,
+                        "shortIds": list(short_ids),
+                        "settings": {
+                            "publicKey": f"{str(public_key)}",
+                            "fingerprint": f"{fingerprint}",
+                            "serverName": f"{serverName}",
+                            "spiderX": f"{spiderX}"
+                        }
+                    },
+                    "tcpSettings": {
+                        "acceptProxyProtocol": bool(acceptProxyProtocol),
+                        "header": {
+                            "type": "none"
+                        }
+                    }
+                })
+
+            # Output of the location
+            # and the error itself to
+            # the log.
+            except Exception as err:
+                log.error(
+                    "An error has occurred in the "
+                    "X_UI/create_connection.streamSettings "
+                    f"program block: {err}"
+                )
+
+                return False
+
+            try:
+                sniffing = json.dumps({
+                    "enabled": bool(sniffing_enabled),
+                    "destOverride": list(destOverride),
+                    "metadataOnly": bool(metadataOnly),
+                    "routeOnly": bool(routeOnly)
+                })
+
+            # Output of the location
+            # and the error itself to
+            # the log.
+            except Exception as err:
+                log.error(
+                    "An error has occurred in the "
+                    "X_UI/create_connection.sniffing "
+                    f"program block: {err}"
+                )
+
+                return False
+
+            try:
+                allocate = json.dumps({
+                    "strategy": f"{str(strategy)}",
+                    "refresh": int(refresh),
+                    "concurrency": int(concurrency)
+                })
+
+            # Output of the location
+            # and the error itself to
+            # the log.
+            except Exception as err:
+                log.error(
+                    "An error has occurred in the "
+                    "X_UI/create_connection.allocate "
+                    f"program block: {err}"
+                )
+
+                return False
+
+            try:
+                payload = {
+                    "up": int(up),
+                    "down": int(down),
+                    "total": int(total),
+                    "remark": f"{str(remark)}",
+                    "enable": bool(enable),
+                    "expiryTime": int(expiryTime),
+                    "listen": f"{str(listen)}",
+                    "port": int(free_port),
+                    "protocol": f"{str(protocol)}",
+                    "settings": settings,
+                    "streamSettings": streamSettings,
+                    "sniffing": sniffing,
+                    "allocate": allocate
+                }
+
+            # Output of the location
+            # and the error itself to
+            # the log.
+            except Exception as err:
+                log.error(
+                    "An error has occurred in the "
+                    "X_UI/create_connection.payload "
+                    f"program block: {err}"
+                )
+
+                return False
 
             # Request to add a new connection.
             res = self.session.post(
@@ -1271,14 +1435,41 @@ class X_UI(API_CLIENT):
         except RequestException as err:
             log.error(
                 "An error has occurred in the "
-                "X_UI/get_connections "
+                "X_UI/create_connection "
                 f"program block: {err}"
             )
+
+            return False
+
+    # Search for connections
+    # to create a user.
+    def search_connection(self):
+        log.info(
+            "Search for connections"
+        )
+
+        try:
+            connections = self.get_connections()
+            min_conn = min(connections[1], key=lambda x: x['clients_count'])
+
+            return min_conn['conn_id']
+
+        # Output of the location
+        # and the error itself to
+        # the log.
+        except Exception as err:
+            log.error(
+                "An error has occurred in the "
+                "X_UI/search_connection "
+                f"program block: {err}"
+            )
+
+            return False
 
     # Creating a new client on
     # an existing connection.
     def add_client(self,
-                   connection_id: int = 4,
+                   connection_id: int = 0,
                    flow: str = "xtls-rprx-vision",
                    email: str = None,
                    limit_ip: int = 0,
@@ -1291,6 +1482,9 @@ class X_UI(API_CLIENT):
         log.info(
             "Adding a new user"
         )
+
+        if connection_id == 0:
+            connection_id = self.search_connection()
 
         # Checking that expiration time
         # contains any value greater than 0,
@@ -1422,9 +1616,74 @@ class X_UI(API_CLIENT):
         except RequestException as err:
             log.error(
                 "An error has occurred in the "
-                "X_UI/add_client"
+                "X_UI/add_client "
                 f"program block: {err}"
             )
+
+            return False
+
+    # Checking xray activity.
+    def xray_parse_active(self):
+        log.info(
+            "Getting xray status"
+        )
+
+        try:
+            # A request to receive all
+            # data on the x-ui system.
+            res = self.session.post(
+                url=f"{self.x_ui_link}/server/status",
+                # Skipping the verification
+                # of a self-signed certificate.
+                verify=False,
+                # Allows you to download the
+                # response in parts, reducing
+                # the memory load.
+                stream=True,
+            )
+
+            # Checking the successful
+            # response from the server.
+            if res.status_code == 200:
+
+                # Converting the binary response
+                # from the server to JSON format.
+                j_cont = json.loads(res.content)
+
+                # Checking that success
+                # from the server is True.
+                if j_cont['success']:
+
+                    obj_data = j_cont['obj']
+
+                    # Xray status
+                    xray_status = obj_data['xray']['state']
+
+                    if xray_status == "running":
+                        return True, xray_status
+                    else:
+                        return False
+
+            else:
+                log.error(
+                    f"[{res.status_code}] An error "
+                    "occurred when accessing the "
+                    "server"
+                )
+
+                return False
+
+        # Output of the location
+        # and the error itself to
+        # the log.
+        except RequestException as err:
+            log.error(
+                "An error has occurred in the "
+                "X_UI/xray_parse_active prog"
+                f"ram block: {err}"
+            )
+
+            return False
 
     # Stopping the xray service.
     # If the xray auto-restart setting
@@ -1472,7 +1731,7 @@ class X_UI(API_CLIENT):
                 # Checking that success
                 # from the server is True.
                 if j_cont['success']:
-                    
+
                     # Checking that success from
                     # the xray server is True.
                     if self.xray_result():
@@ -1484,7 +1743,7 @@ class X_UI(API_CLIENT):
                             xray_active = self.xray_parse_active()
                             if xray_active:
                                 break
-                            
+
                         # Checking that it returned True.
                         if xray_active:
 
@@ -1508,7 +1767,7 @@ class X_UI(API_CLIENT):
                             )
 
                             return True
-                        
+
                     else:
                         log.error(
                             "xray_result returned False. "
@@ -1524,14 +1783,14 @@ class X_UI(API_CLIENT):
                     )
 
                     return False
-                
+
             else:
                 log.error(
                     f"[{res.status_code}] An error "
                     "occurred when accessing the "
                     "server"
                 )
-                
+
                 return False
 
         # Output of the location
@@ -1543,6 +1802,8 @@ class X_UI(API_CLIENT):
                 "X_UI/xray_stop"
                 f"program block: {err}"
             )
+
+            return False
 
     # Restarting the xray service.
     def xray_restart(self):
@@ -1621,6 +1882,7 @@ class X_UI(API_CLIENT):
                 )
 
                 return False
+
         # Output of the location
         # and the error itself to
         # the log.
@@ -1630,6 +1892,8 @@ class X_UI(API_CLIENT):
                 "X_UI/xray_restart "
                 f"program block: {err}"
             )
+
+            return False
 
     # Checking the xray result.
     def xray_result(self):
@@ -1684,67 +1948,6 @@ class X_UI(API_CLIENT):
                 "An error has occurred in the "
                 "X_UI/xray_result"
                 f"program block: {err}"
-            )
-
-    # Checking xray activity.
-    def xray_parse_active(self):
-        log.info(
-            "Getting xray status"
-        )
-
-        try:
-            # A request to receive all
-            # data on the x-ui system.
-            res = self.session.post(
-                url=f"{self.x_ui_link}/server/status",
-                # Skipping the verification
-                # of a self-signed certificate.
-                verify=False,
-                # Allows you to download the
-                # response in parts, reducing
-                # the memory load.
-                stream=True,
-            )
-
-            # Checking the successful
-            # response from the server.
-            if res.status_code == 200:
-
-                # Converting the binary response
-                # from the server to JSON format.
-                j_cont = json.loads(res.content)
-
-                # Checking that success
-                # from the server is True.
-                if j_cont['success']:
-
-                    obj_data = j_cont['obj']
-
-                    # Xray status
-                    xray_status = obj_data['xray']['state']
-
-                    if xray_status == "running":
-                        return True, xray_status
-                    else:
-                        return False
-
-            else:
-                log.error(
-                    f"[{res.status_code}] An error "
-                    "occurred when accessing the "
-                    "server"
-                )
-
-                return False
-
-        # Output of the location
-        # and the error itself to
-        # the log.
-        except RequestException as err:
-            log.error(
-                "An error has occurred in the "
-                "X_UI/xray_parse_active prog"
-                f"ram block: {err}"
             )
 
             return False
