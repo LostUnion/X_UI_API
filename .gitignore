@@ -1,0 +1,12 @@
+.env
+.venv
+*.log
+*.json
+*.db
+QR
+
+create_qr.py
+vless_api.py
+poetry.lock
+poetry.toml
+__pycache__/

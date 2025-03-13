@@ -25,6 +25,8 @@ class Config(object):
 
     # LOGS data
     X_UI_LOGS_PATH = str(os.getenv('X_UI_LOGS_PATH'))
+    FAST_API_LOGS_PATH = str(os.getenv('FAST_API_LOGS_PATH'))
+    UVICORN_LOGS_PATH = str(os.getenv('UVICORN_LOGS_PATH'))
 
     # BACKUPS data
     X_UI_BACKUPS_PATH = str(os.getenv('X_UI_BACKUPS_PATH'))

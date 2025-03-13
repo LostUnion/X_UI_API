@@ -1,44 +1,69 @@
-import os
 import logging
 from pathlib import Path
 from datetime import datetime
 from config import Config
 
-class LoggingColorFormatter(logging.Formatter):
-    COLORS = {
-        'DEBUG': '\033[36m',        # Голубой
-        'INFO': '\033[32m',         # Зеленый
-        'WARNING': '\033[33m',      # Желтый
-        'ERROR': '\033[31m',        # Красный
-        'CRITICAL': '\033[1;31m'    # Жирный красный
-    }
-    RESET = '\033[0m'
+class Logging_X_UI:
+    logger = logging.getLogger("file_only_logger")
 
-    def format(self, record):
-        # Создаем копию levelname, чтобы цвет не попадал в другие обработчики
-        record.levelname_color = f"{self.COLORS.get(record.levelname, self.RESET)}{record.levelname}{self.RESET}"
-        log_msg = super().format(record)
-        return log_msg.replace(record.levelname, record.levelname_color)
+    folder_logs = Path(Config.X_UI_LOGS_PATH)
 
-logger = logging.getLogger("file_only_logger")
+    if not folder_logs.is_dir():
+        folder_logs.mkdir(parents=True, exist_ok=True)
 
-folder_logs = Path(Config.X_UI_LOGS_PATH)
+    log_filename = folder_logs / f'{datetime.now().strftime("%Y-%m-%d")}.log'
 
-if not folder_logs.is_dir():
-    folder_logs.mkdir(parents=True, exist_ok=True)
+    log_file_handler = logging.FileHandler(log_filename, encoding="utf-8")
+    file_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    log_file_handler.setFormatter(file_formatter)
 
-# Форматирование имени файла с сегодняшней датой
-log_filename = folder_logs / f'{datetime.now().strftime("%Y-%m-%d")}.log'
+    logger.addHandler(log_file_handler)
 
-# File handler для записи в файл (без ANSI)
-log_file_handler = logging.FileHandler(log_filename, encoding="utf-8")
-file_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-log_file_handler.setFormatter(file_formatter)
+    logger.setLevel(logging.DEBUG)
 
-# Добавляем только file handler
-logger.addHandler(log_file_handler)
+    logger.disabled = False
 
-# Устанавливаем уровень логирования
-logger.setLevel(logging.DEBUG)
+logger_xui = Logging_X_UI.logger
 
-logger.disabled = False
+class Logging_FastAPI:
+    logger = logging.getLogger("fastapi")
+
+    folder_logs = Path(Config.FAST_API_LOGS_PATH)
+
+    if not folder_logs.is_dir():
+        folder_logs.mkdir(parents=True, exist_ok=True)
+
+    log_filename = folder_logs / f'{datetime.now().strftime("%Y-%m-%d")}.log'
+
+    log_file_handler = logging.FileHandler(log_filename, encoding="utf-8")
+    file_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    log_file_handler.setFormatter(file_formatter)
+
+    logger.addHandler(log_file_handler)
+
+    logger.setLevel(logging.DEBUG)
+
+    logger.disabled = False
+
+logger_fastapi = Logging_FastAPI.logger
+
+
+class Logging_Uvicorn:
+    logger = logging.getLogger("uvicorn")
+
+    folder_logs = Path(Config.UVICORN_LOGS_PATH)
+
+    if not folder_logs.is_dir():
+        folder_logs.mkdir(parents=True, exist_ok=True)
+
+    log_filename = folder_logs / f'{datetime.now().strftime("%Y-%m-%d")}.log'
+
+    log_file_handler = logging.FileHandler(log_filename, encoding="utf-8")
+    file_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    log_file_handler.setFormatter(file_formatter)
+
+    logger.addHandler(log_file_handler)
+
+    logger.setLevel(logging.DEBUG)
+
+    logger.disabled = False
